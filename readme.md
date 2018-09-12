@@ -1,7 +1,7 @@
 ## complile and test commands
 ### complile:
 ```bash
-make player0.class
+make player14.class
 ```
 ### submit(locally):
 ```bash
