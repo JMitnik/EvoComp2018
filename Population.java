@@ -2,7 +2,7 @@ import org.vu.contest.ContestEvaluation;
 import java.util.Random;
 
 public class Population {
-    public static final int DIM = 10;
+    static final int DIM = 10;
     // temporarily using native double [][]
     // the design is based on this fact: using childrenMatrix to collect the
     // selected arrays in parentMatrix by children[j]=parent[i]
@@ -13,7 +13,7 @@ public class Population {
     private double[] scores;
     private int[] selected = null;
     private ContestEvaluation eval;
-
+    private Random rnd_;
     private int populationSize;
     private int childrenSize;
 
@@ -70,8 +70,15 @@ public class Population {
     public int[] getSelected() {
         return selected;
     }
-
+    
     public double[] getScores() {
         return scores;
     }
+    public int getPopulationSize() {
+        return populationSize;
+    }
+    public int getChildrenSize() {
+        return childrenSize;
+    }
+    
 }
