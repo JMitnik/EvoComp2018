@@ -8,9 +8,11 @@ public interface Strategy {
 
     public void mutation();
 
-    public void crossOver();
-
-    public bool isTerminated();
+    public void crossover();
 
     public void propagate();
+    
+    public bool isTerminated();
+
+    public void run();
 }

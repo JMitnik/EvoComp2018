@@ -6,12 +6,13 @@ public class Population {
     // temporarily using native double [][]
     // the design is based on this fact: using childrenMatrix to collect the
     // selected arrays in parentMatrix by children[j]=parent[i]
-    // and the crossover and mutation changes on children would reflect to parents
+    // and the crossover and mutation changes on children matrix would reflect to parents matrix
     // correct me if im wrong
     private double[][] parentMatrix;
     private double[][] childrenMatrix = null;
     private double[] scores;
     private int[] selected = null;
+    private int[] unselected = null;
     private ContestEvaluation eval;
     private Random rnd_;
     private int populationSize;
@@ -57,6 +58,12 @@ public class Population {
         for (int i = 0; i < this.populationSize; i++) {
             scores[i] = this.eval.evaluate(parentMatrix[i]);
         }
+    }
+
+    public void meanPopulation(double[] res) {
+        assert res.length == DIM;
+        meanVector(parentMatrix, res);
+        return;
     }
 
     public double[][] getParents() {
