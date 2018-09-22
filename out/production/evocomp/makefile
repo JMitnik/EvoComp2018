@@ -2,7 +2,7 @@ player14.class: contest.jar player14.java
 	javac -cp $^
 
 .PHONY: submit
-submit: MainClass.txt submission.jar player14.class
+submit: MainClass.txt submission.jar *.class
 	jar cmf $^
 
 .PHONY: test_dummy

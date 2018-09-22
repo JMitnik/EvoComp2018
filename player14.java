@@ -47,7 +47,7 @@ public class player14 implements ContestSubmission
 	public void run()
 	{
 		// Run your algorithm here
-
+		int test = 1;
         int evals = 0;
         // init population
         // calculate fitness
