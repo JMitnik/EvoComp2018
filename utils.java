@@ -31,13 +31,16 @@ public class utils {
     }
 
     public static void meanVector(double[][] arr, double[] mean) {
-        length = arr.length;
-        assert length>0;
+        int length = arr.length;
+        assert length > 0;
         assert arr[0].length == mean.length;
+
         for (double[] a : arr) {
             addVector(a, mean, mean);
         }
-        mean /= length;
+
+//        TODO: Type Error, assertion is broken
+//        mean /= length;
         return;
     }
 

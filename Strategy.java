@@ -1,6 +1,4 @@
 import org.vu.contest.ContestEvaluation;
-import java.util.Random;
-import Population;
 
 public interface Strategy {
     final static int DIM = 10;
@@ -12,7 +10,7 @@ public interface Strategy {
 
     public void propagate();
     
-    public bool isTerminated();
+    public boolean isTerminated();
 
     public void run();
 }

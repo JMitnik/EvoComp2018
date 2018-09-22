@@ -30,7 +30,7 @@ public class Population {
         initScores();
     }
 
-    private initSampling(){
+    private void initSampling(){
         for (double[] ind : parentMatrix) {
             for(int i=0;i<ind.length;i++){
                 ind[i] = rnd_.nextDouble()*10-5;
@@ -50,19 +50,21 @@ public class Population {
         if (this.selected==null)
             return;
         for (int i : this.selected) {
-            scores[i] = this.eval.evaluate(parentMatrix[i]);
+//            TODO: FIX TYPE
+//            scores[i] = this.eval.evaluate(parentMatrix[i]);
         }
     }
 
     private void initScores() {
         for (int i = 0; i < this.populationSize; i++) {
-            scores[i] = this.eval.evaluate(parentMatrix[i]);
+            //            TODO: FIX TYPE
+//            scores[i] = this.eval.evaluate(parentMatrix[i]);
         }
     }
 
     public void meanPopulation(double[] res) {
         assert res.length == DIM;
-        meanVector(parentMatrix, res);
+        utils.meanVector(parentMatrix, res);
         return;
     }
 

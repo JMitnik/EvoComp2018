@@ -1,0 +1,9 @@
+player14.class
+submission.jar
+*.info
+*.dat
+*.tdat
+.DS_Store
+# for vscode
+*.sql
+.vscode

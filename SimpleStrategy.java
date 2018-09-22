@@ -1,8 +1,5 @@
 import java.util.Random;
 
-import Strategy;
-import utils;
-
 public class SimpleStrategy implements Strategy {
     // dont pay attn to these craps, you will know what they are for when you read
     // the code.
@@ -15,22 +12,23 @@ public class SimpleStrategy implements Strategy {
     private double crossoverDimProb;
     private double mutationDimProb;
     private double mutationSigma;
-    private bool isUsingMixInCrossover;
+    private boolean isUsingMixInCrossover;
     private double mixRate;
     private int curIter = 0;
 
     private double[] scores = p.getScores();
     private double[][] children = p.getChildren();
     private double[][] parents = p.getParents();
-    private double[] selected = p.getSelected();
+    private int[] selected = p.getSelected();
+    private int[] unselected;
     private Random rnd_;
 
-  public simpleStrategy(Population p, double mutationIndProb,
+  public SimpleStrategy(Population p, double mutationIndProb,
                         double mutationDimProb, double mutationSigma,
                         double crossoverIndProb, double crossoverDimProb,
-                        bool isUsingMixInCrossover, double mixRate, int maxIterations) {
+                        boolean isUsingMixInCrossover, double mixRate, int maxIterations) {
     populationSize = p.getPopulationSize();
-    childrenSize = p.getchildrenSize();
+    childrenSize = p.getChildrenSize();
     this.p = p;
     this.mutationIndProb = mutationIndProb;
     this.mutationDimProb = mutationDimProb;
@@ -103,7 +101,7 @@ public class SimpleStrategy implements Strategy {
     public void mutation() {
         for (int i = 0; i < childrenSize; i++) {
             if (rnd_.nextDouble() < mutationIndProb) {
-                for (int j = 0; j < DIM; j++) {
+                for (int j = 0; j < Strategy.DIM; j++) {
                     if (rnd_.nextDouble() < mutationDimProb) {
                         children[i][j] = utils.clamp(children[i][j] + rnd_.nextGaussian() * mutationSigma);
                     }
@@ -118,6 +116,8 @@ public class SimpleStrategy implements Strategy {
     // when its positive, pair the second cand with it.
     @Override
     public void crossover() {
+//      TODO: We need to properly define the max
+        int max = 1000;
         int prev = -1;
         // looping on the first dim and roll the dice
         for (int i = 0; i < childrenSize; i++) {
@@ -170,7 +170,7 @@ public class SimpleStrategy implements Strategy {
 
     // currently only a simple one
     @Override
-    public bool isTerminated() {
+    public boolean isTerminated() {
         if (curIter > maxIterations) {
             return true;
         }
