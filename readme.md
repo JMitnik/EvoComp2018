@@ -1,21 +1,9 @@
-## complile and test commands
-### complile:
-```bash
-make player14.class
+## Change the LD_LIBRARY_PATH in the run.sh
 ```
-### submit(locally):
-```bash
-make submit
+export LD_LIBRARY_PATH=~/EvoComp2018/
 ```
-### test on dummy func:
+## Test the program with
+
 ```bash
-make test_dummy
-```
-### test on BentCigarFunction func:
-```bash
-make test_bcf
-```
-### clean up
-```bash
-make clean
+sudo bash run.sh
 ```
