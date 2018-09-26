@@ -99,8 +99,8 @@ public void Select_TS(int tsize){
                 parent2.addIndividual(tmp);
         }
 }
-//single point crossover
-public void Crossover(){
+// Simple arithmetic crossover
+public void Crossover_SA(double alpha){
         Random random = new Random();
         offspring= new Population();
         for(int p=0; p<popsize/2; p++) {
@@ -120,13 +120,13 @@ public void Crossover(){
                         double new_genes1[]={0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
                         double new_genes2[]={0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
                         for(int i=0; i<dim; i++) {
-                                if(i<=pos) {
+                                if(i<pos) {
                                         new_genes1[i]=genes1[i];
                                         new_genes2[i]=genes2[i];
                                 }
                                 else{
-                                        new_genes1[i]=genes2[i];
-                                        new_genes2[i]=genes1[i];
+                                        new_genes1[i]=alpha*genes2[i]+(1-alpha)*genes1[i];
+                                        new_genes2[i]=alpha*genes1[i]+(1-alpha)*genes2[i];
                                 }
                         }
                         Individual offspring1=new Individual(new_genes1);
@@ -134,7 +134,38 @@ public void Crossover(){
                         offspring.addIndividual(offspring1);
                         offspring.addIndividual(offspring2);
                 }
-        }        
+        }
+}
+//Whole arithmetic crossover
+public void Crossover_WA(double alpha){
+        Random random = new Random();
+        offspring= new Population();
+        for(int p=0; p<popsize/2; p++) {
+                Individual dad=parent1.getPopulation().get(p);
+                Individual mom=parent2.getPopulation().get(p);
+                if(random.nextDouble()>p_crossover) {
+                        Individual offspring1=new Individual(dad.getGenes());
+                        Individual offspring2=new Individual(mom.getGenes());
+                        offspring.addIndividual(offspring1);
+                        offspring.addIndividual(offspring2);
+                }
+                else{
+                        double genes1[]=dad.getGenes();
+                        double genes2[]=mom.getGenes();
+                        int pos=random.nextInt(dim);
+                        //generate new genes
+                        double new_genes1[]={0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+                        double new_genes2[]={0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+                        for(int i=0; i<dim; i++) {
+                              new_genes1[i]=alpha*genes2[i]+(1-alpha)*genes1[i];
+                              new_genes2[i]=alpha*genes1[i]+(1-alpha)*genes2[i];
+                        }
+                        Individual offspring1=new Individual(new_genes1);
+                        Individual offspring2=new Individual(new_genes2);
+                        offspring.addIndividual(offspring1);
+                        offspring.addIndividual(offspring2);
+                }
+        }
 }
 public void Mutation(double sigma){
         Random random = new Random();
@@ -143,7 +174,7 @@ public void Mutation(double sigma){
                         Individual ind=offspring.getPopulation().get(i);
                         double genes[]=ind.getGenes();
                         for(int j=0; j<dim; j++) {
-                                genes[j]= Math.max(-5, Math.min(5, genes[j]+random.nextGaussian()*5*sigma));
+                                genes[j]= Math.max(-5, Math.min(5, genes[j]+random.nextGaussian()*sigma));
                         }
                         offspring.getPopulation().get(i).setGenes(genes);
                 }
