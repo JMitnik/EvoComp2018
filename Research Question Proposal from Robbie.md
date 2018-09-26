@@ -13,9 +13,9 @@ Perhaps we could focus on finding the connection between the performance of stra
 For instance, by calculating the variance of the fitness, we can apply different pressure for selection.
 We can always apply the best strategy by analyzing the distribution of the fitness in every generation of the population.
 
-### **2. Considering using a variable possibility for the crossover and mutation.**
+### **2. Considering using variable possibilities for the crossover and mutation.**
 
-Optimizing the possibility for the mutation and crossover can give a great improvement to the performance of the Evolutionary Algorithm.
+Optimizing the possibilities for the mutation and crossover can give a great improvement to the performance of the Evolutionary Algorithm.
 Typically we use fixed possibilities for crossover and mutation.
 But actually we can come up with some strategies using variable possibilities.
 It means that the possibilities can be changed as time goes by.
