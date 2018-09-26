@@ -1,5 +1,6 @@
 ## **Research Question Proposal**
 <h3 style="color:#6666FF;text-align:right;">From Robbie</h3>
+
 ### **1. Changing the strategy according to the distribution of the fitness in every generation.**
 
 For each operator of the Evolutionary Algorithm(EA), we mostly choose a single one
@@ -20,7 +21,7 @@ But actually we can come up with some strategies using variable possibilities.
 It means that the possibilities can be changed as time goes by.
 In this case, we could focus on finding a formula describing how the possibility could be changed according to the number of generations.
 
-### **2. Implement another EA for optimizing the parameters.**
+### **3. Implement another EA for optimizing the parameters.**
 
 If we determined the strategies for the EA, the first thing we like to do is finding the best parameters. However, the parameters are randomly chosen and combined to each other, which means that we can't determine the best parameters in a simple way.
 Then we could implement another EA for optimizing the parameters. We take the parameters as the inputs and the performance of the original EA as the output.
