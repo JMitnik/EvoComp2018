@@ -12,7 +12,6 @@ public class player14 implements ContestSubmission {
         private int evaluations_limit_;
         private Population pop;
         private int popsize;
-
         public player14() {
                 rnd_ = new Random();
         }
@@ -65,8 +64,7 @@ public class player14 implements ContestSubmission {
                 this.popsize = 10;
                 this.InitPopulation();
                 int sizeOfT = 4;
-                double p_mutation = 0.2, p_crossover = 1, mixRate = 0.5, msigma = 0.02; // Probability of mutation and
-                                                                                          // crossover
+                double p_mutation = 0.2, p_crossover = 1, mixRate = 0.5, msigma = 0.02; // Parameters
                 EvoAlgorithm evo = new EvoAlgorithm(pop, evaluation_, p_mutation, p_crossover, evaluations_limit_ - this.popsize,
                                 sizeOfT, mixRate, msigma);
                 evo.run();
