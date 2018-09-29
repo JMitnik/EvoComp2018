@@ -12,3 +12,4 @@ java -jar testrun.jar -submission=player14 -evaluation=SphereEvaluation -seed=1
 echo "evaluation=BentCigarFunction:"
 java -jar testrun.jar -submission=player14 -evaluation=BentCigarFunction -seed=1
 rm player14.class ./com/EvoAlgorithm.class ./com/Individual.class ./com/Population.class ./com/Utils.class
+rm -r tmp

@@ -7,6 +7,7 @@ import org.vu.contest.ContestEvaluation;
 public class EvoAlgorithm {
         private ContestEvaluation e;
         private double p_mutation;
+        private double pDimMutationProb;
         private double p_crossover;
         private int popsize;
         private int dim;
@@ -22,11 +23,12 @@ public class EvoAlgorithm {
         private double msigma;
         private double mixRate;
 
-        public EvoAlgorithm(Population population, ContestEvaluation e, double p_mutation, double p_crossover,
-                        int eval_limits, int sizeOfT, double mixRate, double msigma) {
+        public EvoAlgorithm(Population population, ContestEvaluation e, double p_mutation, double pDimMutationProb,
+                        double p_crossover, int eval_limits, int sizeOfT, double mixRate, double msigma) {
                 this.population = population;
                 this.e = e;
                 this.p_mutation = p_mutation;
+                this.pDimMutationProb = pDimMutationProb;
                 this.p_crossover = p_crossover;
                 this.popsize = population.getPopulation().size();
                 this.dim = population.getGeneFori(0).length;
@@ -97,30 +99,23 @@ public class EvoAlgorithm {
                 Random random = new Random();
                 parent1 = new Population();
                 parent2 = new Population();
-                for (int i = 0; i < popsize / 2; i++) {
-                        Population Tournament = new Population();
-                        for (int j = 0; j < tsize; j++) {
-                                Individual rnd = this.population.get(random.nextInt(popsize));
-                                Tournament.addIndividual(rnd);
+                // TODO: use heap sort instead of full qsort; merge two loop together
+                Population[] tmpArray = { parent1, parent2 };
+                for (Population tmpPopulation : tmpArray) {
+                        for (int i = 0; i < popsize / 2; i++) {
+                                Population Tournament = new Population();
+                                for (int j = 0; j < tsize; j++) {
+                                        Individual rnd = this.population.get(random.nextInt(popsize));
+                                        Tournament.addIndividual(rnd);
+                                }
+                                Collections.sort(Tournament.getPopulation(), Collections.reverseOrder());
+                                Individual tmp = new Individual();
+                                tmp.setGenes(Tournament.getGeneFori(0));
+                                tmp.setFitness(Tournament.getFitnessFori(0));
+                                tmpPopulation.addIndividual(tmp);
                         }
-                        Collections.sort(Tournament.getPopulation(), Collections.reverseOrder());
-                        Individual tmp = new Individual();
-                        tmp.setGenes(Tournament.getGeneFori(0));
-                        tmp.setFitness(Tournament.getFitnessFori(0));
-                        parent1.addIndividual(tmp);
                 }
-                for (int i = 0; i < popsize / 2; i++) {
-                        Population Tournament = new Population();
-                        for (int j = 0; j < tsize; j++) {
-                                Individual rnd = this.population.get(random.nextInt(popsize));
-                                Tournament.addIndividual(rnd);
-                        }
-                        Collections.sort(Tournament.getPopulation(), Collections.reverseOrder());
-                        Individual tmp = new Individual();
-                        tmp.setGenes(Tournament.getGeneFori(0));
-                        tmp.setFitness(Tournament.getFitnessFori(0));
-                        parent2.addIndividual(tmp);
-                }
+
         }
 
         // Simple arithmetic crossover
@@ -179,8 +174,9 @@ public class EvoAlgorithm {
                                 double new_genes1[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
                                 double new_genes2[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
                                 for (int i = 0; i < dim; i++) {
-                                        new_genes1[i] = alpha * genes2[i] + (1 - alpha) * genes1[i];
-                                        new_genes2[i] = alpha * genes1[i] + (1 - alpha) * genes2[i];
+                                        double rndNum = random.nextDouble();
+                                        new_genes1[i] = rndNum * genes2[i] + (1 - rndNum) * genes1[i];
+                                        new_genes2[i] = rndNum * genes1[i] + (1 - rndNum) * genes2[i];
                                 }
                                 Individual offspring1 = new Individual(new_genes1);
                                 Individual offspring2 = new Individual(new_genes2);
@@ -197,8 +193,9 @@ public class EvoAlgorithm {
                                 Individual ind = offspring.get(i);
                                 double genes[] = ind.getGenes();
                                 for (int j = 0; j < dim; j++) {
-                                  genes[j] = Utils.clamp(
-                                      genes[j] + random.nextGaussian() * sigma, 5, -5);
+                                        if (random.nextDouble() < pDimMutationProb) {
+                                                genes[j] = Utils.clamp(genes[j] + random.nextGaussian() * sigma, 5, -5);
+                                        }
                                 }
                                 offspring.get(i).setGenes(genes);
                         }
@@ -237,8 +234,9 @@ public class EvoAlgorithm {
                         // Apply crossover / mutation operators
                         // Crossover_SA(0.5); // Simple arithmetic crossover
                         Crossover_WA(mixRate); // Whole arithmetic crossover
-                        Mutation(realSigma);   // randomGauss(sigma)
-                        realSigma = Utils.exponentialDecay(msigma, evals, eval_limits);
+                        Mutation(realSigma); // randomGauss(sigma)
+                        // realSigma = Utils.exponentialDecay(msigma, evals, eval_limits);
+                        // realSigma = Utils.linearDecay(msigma, evals, eval_limits);
                         // Check fitness of unknown fuction
                         for (int i = 0; i < offspring.size(); i++) {
                                 Individual child = offspring.get(i);
