@@ -7,3 +7,7 @@ submission.jar
 # for vscode
 *.sql
 .vscode
+
+./com/*.class
+./submission.jar
+./tmp
