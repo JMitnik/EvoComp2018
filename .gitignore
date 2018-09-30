@@ -11,3 +11,7 @@ submission.jar
 ./com/*.class
 ./submission.jar
 ./tmp
+
+*.xml
+*.iml
+*/submission.jar
