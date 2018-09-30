@@ -3,7 +3,7 @@ package com;
 public class Individual implements Comparable<Individual> {
         private double genes[];
         private double fitness;
-
+        private boolean changed=false;
         public Individual() {
 
         }
@@ -27,7 +27,9 @@ public class Individual implements Comparable<Individual> {
         public void setFitness(double fitness) {
                 this.fitness = fitness;
         }
-
+        public void setChanged() {
+                changed = true;
+        }
         @Override
         public int compareTo(Individual ind) {
                 if (ind.getFitness() > this.getFitness()) {
