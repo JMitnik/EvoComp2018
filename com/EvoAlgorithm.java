@@ -23,6 +23,19 @@ public class EvoAlgorithm {
         private double msigma;
         private double mixRate;
 
+        /**
+         * Initializes EvoAlgorithm
+         * 
+         * @param population
+         * @param e
+         * @param p_mutation
+         * @param pDimMutationProb
+         * @param p_crossover
+         * @param eval_limits
+         * @param sizeOfT
+         * @param mixRate
+         * @param msigma
+         */
         public EvoAlgorithm(Population population, ContestEvaluation e, double p_mutation, double pDimMutationProb,
                         double p_crossover, int eval_limits, int sizeOfT, double mixRate, double msigma) {
                 this.population = population;
@@ -94,32 +107,57 @@ public class EvoAlgorithm {
                 }
         }
 
-        // Tournament Selection
+        /**
+         * Tournament Selection
+         * 
+         * @pre -
+         * @post Parent1 and parent2 have now received a selection of best-fit
+         *       individuals
+         * @param tsize
+         */
         public void Select_TS(int tsize) {
                 Random random = new Random();
                 parent1 = new Population();
                 parent2 = new Population();
+
                 // TODO: use heap sort instead of full qsort; merge two loop together
                 Population[] tmpArray = { parent1, parent2 };
+
+                // For each parent population as tmpPopulation
                 for (Population tmpPopulation : tmpArray) {
+
+                        // For the half of the population size
                         for (int i = 0; i < popsize / 2; i++) {
                                 Population Tournament = new Population();
+
+                                // TODO: Check if we take members without replacement always or also
+                                // ocassionally could grab the same one for the same tournament
+                                // Grab members for the Tournament
                                 for (int j = 0; j < tsize; j++) {
                                         Individual rnd = this.population.get(random.nextInt(popsize));
                                         Tournament.addIndividual(rnd);
                                 }
+
+                                // Sort the tournament in reverse order, so that you have highest fitness first.
                                 Collections.sort(Tournament.getPopulation(), Collections.reverseOrder());
+
+                                // Create a temporary clone with the same genes and fitness to the parent
                                 Individual tmp = new Individual();
                                 tmp.setGenes(Tournament.getGeneFori(0));
                                 tmp.setFitness(Tournament.getFitnessFori(0));
                                 tmpPopulation.addIndividual(tmp);
                         }
                 }
-
         }
 
-        // Simple arithmetic crossover
+        /**
+         * Simple arithmetic crossover
+         * 
+         * @pre
+         * @post
+         */
         public void Crossover_SA(double alpha) {
+                // Initialize random number
                 Random random = new Random();
                 offspring = new Population();
                 for (int p = 0; p < popsize / 2; p++) {
@@ -154,30 +192,48 @@ public class EvoAlgorithm {
                 }
         }
 
-        // Whole arithmetic crossover
+        /**
+         * Crossover_WA Gets offspring by averaging over parent's alleles using alpha
+         * 
+         * @pre - Parents exist in population with defined gene-set.
+         * @post New children have been added to the offspring population with a mixture
+         *       genes of their parents.
+         */
         public void Crossover_WA(double alpha) {
+                // TODO: Get rid of alpha?
                 Random random = new Random();
                 offspring = new Population();
+
                 for (int p = 0; p < popsize / 2; p++) {
                         Individual dad = parent1.get(p);
                         Individual mom = parent2.get(p);
+
+                        // If we do not apply crossover per p_crossover,
                         if (random.nextDouble() > p_crossover) {
                                 Individual offspring1 = new Individual(dad.getGenes());
                                 Individual offspring2 = new Individual(mom.getGenes());
                                 offspring.addIndividual(offspring1);
                                 offspring.addIndividual(offspring2);
+                                // Else, apply crossover
                         } else {
                                 double genes1[] = dad.getGenes();
                                 double genes2[] = mom.getGenes();
+
+                                // Get random position of alleles
                                 int pos = random.nextInt(dim);
                                 // generate new genes
                                 double new_genes1[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
                                 double new_genes2[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+
+                                // For each allele, set genes of child 1 to be rndNum of parentX, and combined
+                                // with 1-rndNum of parentY
                                 for (int i = 0; i < dim; i++) {
                                         double rndNum = random.nextDouble();
                                         new_genes1[i] = rndNum * genes2[i] + (1 - rndNum) * genes1[i];
                                         new_genes2[i] = rndNum * genes1[i] + (1 - rndNum) * genes2[i];
                                 }
+
+                                // Create offsprings with these genes and add as offspring
                                 Individual offspring1 = new Individual(new_genes1);
                                 Individual offspring2 = new Individual(new_genes2);
                                 offspring.addIndividual(offspring1);
@@ -186,76 +242,130 @@ public class EvoAlgorithm {
                 }
         }
 
-        public void Mutation(double sigma) {
+        /**
+         * Applies Non-Unfirom Mutation
+         * 
+         * @pre Current generation has spawned offspring through crossover (or cloned itself).
+         * @post Offspring now have had a 'p_mutatuion' to mutate themselves based on a gaussian distribution
+         */
+        public void nonUniformMutation(double sigma) {
                 Random random = new Random();
+
+                // For each individual
                 for (int i = 0; i < popsize; i++) {
+
+                        // If we do mutation according to probability p_mutation
                         if (random.nextDouble() <= p_mutation) {
+                                // Get the actual individual, and their genes
                                 Individual ind = offspring.get(i);
                                 double genes[] = ind.getGenes();
+
+                                // For all alleles of their chromosome
                                 for (int j = 0; j < dim; j++) {
+                                        // If pDImensionMutation
                                         if (random.nextDouble() < pDimMutationProb) {
+                                                // Set their genes between 5, -5, and add to their genes some value from
+                                                // gaussian distribution
                                                 genes[j] = Utils.clamp(genes[j] + random.nextGaussian() * sigma, 5, -5);
                                         }
                                 }
+
+                                // Q: Can't we do ind.setGenes(genes)?
                                 offspring.get(i).setGenes(genes);
                         }
                 }
         }
 
-        public void Survive() {
-                Population pop_all = new Population();
-                survivors = new Population();
-                for (int i = 0; i < population.getPopulation().size(); i++) {
-                        Individual tmp = new Individual();
-                        tmp.setGenes(population.getGeneFori(i));
-                        tmp.setFitness(population.getFitnessFori(i));
-                        pop_all.addIndividual(tmp);
+        /**
+         * Merges two populations into one population (e.g. offspring and current
+         * generation)
+         * 
+         * @param populationA
+         * @param populationB
+         * @return Population
+         */
+        private Population mergePopulations(Population populationA, Population populationB) {
+                Population[] populations = { populationA, populationB };
+                Population total_pop = new Population();
+
+                for (Population pop : populations) {
+                        Population tmp_pop = pop.clonePopulation();
+                        total_pop.addIndividuals(tmp_pop.getPopulation());
                 }
-                for (int i = 0; i < offspring.getPopulation().size(); i++) {
-                        Individual tmp = new Individual();
-                        tmp.setGenes(offspring.getGeneFori(i));
-                        tmp.setFitness(offspring.getFitnessFori(i));
-                        pop_all.addIndividual(tmp);
-                }
-                Collections.sort(pop_all.getPopulation(), Collections.reverseOrder());
-                for (int i = 0; i < population.getPopulation().size(); i++) {
-                        survivors.addIndividual(pop_all.get(i));
-                }
-                this.population = survivors;
+
+                return total_pop;
+        }
+
+        /**
+         * Selects out of the pool of offspring and parents the best 'population-size'
+         * survivors
+         * 
+         * @pre Parents and offspring have been selected, each with their own fitness
+         *      values, after potential crossover and mutation.
+         * 
+         * @post The top population-size survivors are selected for the next generation.
+         * 
+         */
+        public void selectSurvivors() {
+                // Initializes containers for all of the population and survivors
+                Population new_population = mergePopulations(population, offspring);
+
+                // Sorts and limits nr of population
+                Collections.sort(new_population.getPopulation(), Collections.reverseOrder());
+                new_population.limitNPopulation(population.getPopulation().size());
+
+                this.population = new_population;
         }
 
         public void run() {
                 double realSigma = msigma;
+
                 while (evals < eval_limits) {
                         // ShowBestFitness();
                         // Select parents
                         // Select_RW(); //Roulette Wheel Selection
                         Select_TS(sizeOfT); // Tournament Selection(size of the Tournament)
+
                         // Apply crossover / mutation operators
                         // Crossover_SA(0.5); // Simple arithmetic crossover
                         Crossover_WA(mixRate); // Whole arithmetic crossover
-                        Mutation(realSigma); // randomGauss(sigma)
+                        nonUniformMutation(realSigma); // randomGauss(sigma)
+
                         // realSigma = Utils.exponentialDecay(msigma, evals, eval_limits);
                         // realSigma = Utils.linearDecay(msigma, evals, eval_limits);
+
                         // Check fitness of unknown fuction
-                        for (int i = 0; i < offspring.size(); i++) {
-                                Individual child = offspring.get(i);
-                                double fitness = (double) e.evaluate(child.getGenes());
-                                offspring.setFitnessFori(i, fitness);
-                                evals++;
-                        }
+
+                        evaluateOffspringPool();
                         setOffspring(offspring);
-                        // Select survivors
-                        Survive();
+                        selectSurvivors();
+                }
+        }
+
+        /**
+         * Sets fitness values for all new offspring.
+         * 
+         * @pre Offspring in this.offspring have been selected from existing parents.
+         * @post 1. Offspring now have an associated fitness value. 2. Evaluation has
+         *       gone up by nr in offspring.
+         */
+        private void evaluateOffspringPool() {
+                for (int i = 0; i < offspring.size(); i++) {
+                        Individual child = offspring.get(i); // Get child
+                        double fitness = (double) e.evaluate(child.getGenes()); // Calculate fitness
+                        offspring.setFitnessFori(i, fitness); //
+                        evals++;
                 }
         }
 
         public void ShowFitness(Population pop, String s) {
                 int popsize = pop.getPopulation().size();
                 System.out.println(s);
+
                 for (int i = 0; i < popsize; i++) {
                         System.out.print(pop.get(i).getFitness() + " ");
                 }
+
                 System.out.println();
         }
 
@@ -283,6 +393,8 @@ public class EvoAlgorithm {
         }
 
         public void setOffspring(Population offspring) {
+                // Q: Is this necessary? offspring is now set to an instance-property, which is
+                // how it is always referred to so far.
                 this.offspring = offspring;
         }
 

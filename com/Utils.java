@@ -3,6 +3,8 @@ package com;
 import java.lang.Math;
 
 class Utils{
+    
+    // Sets x between lower and upperbound
     public static double clamp(double x, double upperBound, double lowerBound) {
         return Math.min(Math.max(x, lowerBound), upperBound);        
     }
