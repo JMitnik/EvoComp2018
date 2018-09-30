@@ -12,6 +12,11 @@ public class player14 implements ContestSubmission {
         private int evaluations_limit_;
         private Population pop;
         private int popsize;
+
+        private boolean isMultimodal;
+        private boolean hasStructure;
+        private boolean isSeparable;
+
         public player14() {
                 rnd_ = new Random();
         }
@@ -31,9 +36,9 @@ public class player14 implements ContestSubmission {
                 // Property keys depend on specific evaluation
                 // E.g. double param =
                 // Double.parseDouble(props.getProperty("property_name"));
-                boolean isMultimodal = Boolean.parseBoolean(props.getProperty("Multimodal"));
-                boolean hasStructure = Boolean.parseBoolean(props.getProperty("Regular"));
-                boolean isSeparable = Boolean.parseBoolean(props.getProperty("Separable"));
+                isMultimodal = Boolean.parseBoolean(props.getProperty("Multimodal"));
+                hasStructure = Boolean.parseBoolean(props.getProperty("Regular"));
+                isSeparable = Boolean.parseBoolean(props.getProperty("Separable"));
                 // Do sth with property values, e.g. specify relevant settings of your
                 // algorithm
                 if (isMultimodal) {
@@ -64,12 +69,35 @@ public class player14 implements ContestSubmission {
                 this.popsize = 10;
                 this.InitPopulation();
                 int sizeOfT = 4;
-                double p_mutation = 0.45, pDimMutationProb=0.3, p_crossover = 1.0,
-                       mixRate = 0.5, msigma = 0.02; // Parameters
-                EvoAlgorithm evo = new EvoAlgorithm(
-                    pop, evaluation_, p_mutation, pDimMutationProb, p_crossover,
-                    evaluations_limit_ - this.popsize, sizeOfT, mixRate,
-                    msigma);
+                double pIndMutationProb = 0.45, pDimMutationProb = 0.3, crossoverIndProb = 1.0, crossoverDimProb = 0.9,
+                                mixRate = 0.5, msigma = 0.02; // Parameters
+                if (!isMultimodal) {
+                        pIndMutationProb = 0.45;
+                        pDimMutationProb = 0.3;
+                        crossoverIndProb = 1.0;
+                        crossoverDimProb = 0.9;
+                        mixRate = 0.5;
+                        msigma = 0.02; // Parameters
+                } else if (hasStructure) {
+                        pIndMutationProb = 0.45;
+                        pDimMutationProb = 0.8;
+                        crossoverIndProb = 1.0;
+                        crossoverDimProb = 0.5;
+                        mixRate = 0.5;
+                        msigma = 0.02; // Parameters
+                } else if (isSeparable) {
+                        pIndMutationProb = 0.45;
+                        pDimMutationProb = 0.8;
+                        crossoverIndProb = 1.0;
+                        crossoverDimProb = 0.5;
+                        mixRate = 0.5;
+                        msigma = 0.02; // Parameters
+                        double[] temp = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+                        evaluation_.evaluate(temp);
+                }
+                EvoAlgorithm evo = new EvoAlgorithm(pop, evaluation_, pIndMutationProb, pDimMutationProb,
+                                crossoverIndProb, crossoverDimProb, evaluations_limit_ - this.popsize-1, sizeOfT, mixRate,
+                                msigma);
                 evo.run();
         }
 }

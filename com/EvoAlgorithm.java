@@ -5,10 +5,12 @@ import com.*;
 import org.vu.contest.ContestEvaluation;
 
 public class EvoAlgorithm {
+        private static int DIM = 10;
         private ContestEvaluation e;
-        private double p_mutation;
+        private double pIndMutationProb;
         private double pDimMutationProb;
-        private double p_crossover;
+        private double crossoverIndProb;
+        private double crossoverDimProb;
         private int popsize;
         private int dim;
         private Population population;
@@ -23,26 +25,15 @@ public class EvoAlgorithm {
         private double msigma;
         private double mixRate;
 
-        /**
-         * Initializes EvoAlgorithm
-         * 
-         * @param population
-         * @param e
-         * @param p_mutation
-         * @param pDimMutationProb
-         * @param p_crossover
-         * @param eval_limits
-         * @param sizeOfT
-         * @param mixRate
-         * @param msigma
-         */
-        public EvoAlgorithm(Population population, ContestEvaluation e, double p_mutation, double pDimMutationProb,
-                        double p_crossover, int eval_limits, int sizeOfT, double mixRate, double msigma) {
+        public EvoAlgorithm(Population population, ContestEvaluation e, double pIndMutationProb,
+                        double pDimMutationProb, double crossoverIndProb, double crossoverDimProb, int eval_limits,
+                        int sizeOfT, double mixRate, double msigma) {
                 this.population = population;
                 this.e = e;
-                this.p_mutation = p_mutation;
+                this.pIndMutationProb = pIndMutationProb;
                 this.pDimMutationProb = pDimMutationProb;
-                this.p_crossover = p_crossover;
+                this.crossoverIndProb = crossoverIndProb;
+                this.crossoverDimProb = crossoverDimProb;
                 this.popsize = population.getPopulation().size();
                 this.dim = population.getGeneFori(0).length;
                 this.eval_limits = eval_limits;
@@ -150,12 +141,20 @@ public class EvoAlgorithm {
                 }
         }
 
-        /**
-         * Simple arithmetic crossover
-         * 
-         * @pre
-         * @post
-         */
+        public void Crossover_novel(double alpha) {
+                Random random = new Random();
+                offspring = new Population();
+                Individual cand = null;
+                for (int p = 0; p < popsize; p++) {
+                        if (random.nextDouble() > crossoverIndProb) {
+                                if (cand == null)
+                                        cand = parent1.get(p);
+                        }
+
+                }
+        }
+
+        // Simple arithmetic crossover
         public void Crossover_SA(double alpha) {
                 // Initialize random number
                 Random random = new Random();
@@ -163,32 +162,36 @@ public class EvoAlgorithm {
                 for (int p = 0; p < popsize / 2; p++) {
                         Individual dad = parent1.get(p);
                         Individual mom = parent2.get(p);
-                        if (random.nextDouble() > p_crossover) {
-                                Individual offspring1 = new Individual(dad.getGenes());
-                                Individual offspring2 = new Individual(mom.getGenes());
-                                offspring.addIndividual(offspring1);
-                                offspring.addIndividual(offspring2);
-                        } else {
-                                double genes1[] = dad.getGenes();
-                                double genes2[] = mom.getGenes();
-                                int pos = random.nextInt(dim);
-                                // generate new genes
-                                double new_genes1[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
-                                double new_genes2[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
-                                for (int i = 0; i < dim; i++) {
-                                        if (i < pos) {
-                                                new_genes1[i] = genes1[i];
-                                                new_genes2[i] = genes2[i];
-                                        } else {
-                                                new_genes1[i] = alpha * genes2[i] + (1 - alpha) * genes1[i];
-                                                new_genes2[i] = alpha * genes1[i] + (1 - alpha) * genes2[i];
-                                        }
+                        Individual[] dadAndMom = { dad, mom };
+                        if (random.nextDouble() > crossoverIndProb) {
+                                for (Individual ind : dadAndMom) {
+                                        Individual offs = new Individual(ind.getGenes());
+                                        offspring.addIndividual(offs);
                                 }
-                                Individual offspring1 = new Individual(new_genes1);
-                                Individual offspring2 = new Individual(new_genes2);
-                                offspring.addIndividual(offspring1);
-                                offspring.addIndividual(offspring2);
+                                // Individual offspring2 = new Individual(mom.getGenes());
+                                // offspring.addIndividual(offspring2);
+                        } else {
+                                for (Individual ind : dadAndMom) {
+
+                                        double singleGenes1[] = ind.getGenes();
+                                        Individual partner = Utils.partner(dadAndMom, ind);
+                                        // int pos = random.nextInt(dim);
+                                        double new_genes1[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+                                        for (int i = 0; i < DIM; i++) {
+
+                                                if (random.nextDouble() < crossoverDimProb) {
+                                                        double rndNum = random.nextDouble();
+                                                        new_genes1[i] = singleGenes1[i] * rndNum
+                                                                        + partner.getGenes()[i] * (1 - rndNum);
+                                                } else {
+                                                        new_genes1[i] = singleGenes1[i];
+                                                }
+                                        }
+                                        Individual offspring1 = new Individual(new_genes1);
+                                        offspring.addIndividual(offspring1);
+                                }
                         }
+                       
                 }
         }
 
@@ -207,9 +210,8 @@ public class EvoAlgorithm {
                 for (int p = 0; p < popsize / 2; p++) {
                         Individual dad = parent1.get(p);
                         Individual mom = parent2.get(p);
-
-                        // If we do not apply crossover per p_crossover,
-                        if (random.nextDouble() > p_crossover) {
+                        
+                        if (random.nextDouble() > crossoverIndProb) {
                                 Individual offspring1 = new Individual(dad.getGenes());
                                 Individual offspring2 = new Individual(mom.getGenes());
                                 offspring.addIndividual(offspring1);
@@ -253,11 +255,9 @@ public class EvoAlgorithm {
 
                 // For each individual
                 for (int i = 0; i < popsize; i++) {
-
-                        // If we do mutation according to probability p_mutation
-                        if (random.nextDouble() <= p_mutation) {
-                                // Get the actual individual, and their genes
+                        if (random.nextDouble() <= pIndMutationProb) {
                                 Individual ind = offspring.get(i);
+                                ind.setChanged();
                                 double genes[] = ind.getGenes();
 
                                 // For all alleles of their chromosome
@@ -269,9 +269,6 @@ public class EvoAlgorithm {
                                                 genes[j] = Utils.clamp(genes[j] + random.nextGaussian() * sigma, 5, -5);
                                         }
                                 }
-
-                                // Q: Can't we do ind.setGenes(genes)?
-                                offspring.get(i).setGenes(genes);
                         }
                 }
         }
@@ -327,10 +324,9 @@ public class EvoAlgorithm {
                         Select_TS(sizeOfT); // Tournament Selection(size of the Tournament)
 
                         // Apply crossover / mutation operators
-                        // Crossover_SA(0.5); // Simple arithmetic crossover
-                        Crossover_WA(mixRate); // Whole arithmetic crossover
+                        Crossover_SA(mixRate); // Simple arithmetic crossover
+                        // Crossover_WA(mixRate); // Whole arithmetic crossover
                         nonUniformMutation(realSigma); // randomGauss(sigma)
-
                         // realSigma = Utils.exponentialDecay(msigma, evals, eval_limits);
                         // realSigma = Utils.linearDecay(msigma, evals, eval_limits);
 
