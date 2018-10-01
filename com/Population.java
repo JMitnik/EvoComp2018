@@ -1,3 +1,4 @@
+
 package com;
 
 import com.Individual;
@@ -12,6 +13,29 @@ public class Population {
 
         public void addIndividual(Individual newIndividual) {
                 this.population.add(newIndividual);
+        }
+
+        public void addIndividuals(ArrayList<Individual> individuals) {
+                for (Individual ind : individuals) {
+                        this.addIndividual(ind);
+                }
+        }
+
+        public void limitNPopulation(int limit) {
+                this.population = new ArrayList<Individual>(this.population.subList(0, limit));
+        }
+
+        public Population clonePopulation() {
+                Population clonePopulation = new Population();
+
+                for (Individual ind : this.population) {
+                        Individual tmp = new Individual();
+                        tmp.setGenes(ind.getGenes());
+                        tmp.setFitness(ind.getFitness());
+                        clonePopulation.addIndividual(tmp);
+                }
+
+                return clonePopulation;
         }
 
         public ArrayList<Individual> getPopulation() {

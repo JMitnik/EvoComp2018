@@ -1,12 +1,30 @@
 package com;
-
 import java.lang.Math;
-
-class Utils{
+public class Utils {
     public static double clamp(double x, double upperBound, double lowerBound) {
-        return Math.min(Math.max(x, lowerBound), upperBound);        
+        return Math.min(Math.max(x, lowerBound), upperBound);
     }
+
     public static double exponentialDecay(double originValue, int timestep, int finalStep) {
-        return (Math.pow(2.71, -timestep/finalStep)-1/2.71)/(1-1/2.71)*originValue;
+        return (Math.pow(2.71, -timestep / finalStep) - 1 / 2.71) / (1 - 1 / 2.71) * originValue;
+    }
+
+    public static double linearDecay(double originValue, int timestep, int finalStep) {
+        return (1 - timestep / finalStep) * originValue;
+    }
+
+    public static Individual partner(Individual[] dadAndMom, Individual ppl) {
+        if (ppl == dadAndMom[0])
+            return dadAndMom[1];
+        else
+            return dadAndMom[0];
+    }
+    public static double[] FormatGene(double[] child){
+        double formated_child[]={ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+        for(int i=0;i<child.length;i++){
+          // formated_child[i]=Double.parseDouble(String.format("%.4g%n",child[i]));
+           formated_child[i]=child[i];
+        }
+        return formated_child;
     }
 }

@@ -5,6 +5,7 @@ import java.util.Properties;
 import com.Individual;
 import com.Population;
 import com.EvoAlgorithm;
+import com.Utils;
 
 public class player14 implements ContestSubmission {
         Random rnd_;
@@ -12,6 +13,10 @@ public class player14 implements ContestSubmission {
         private int evaluations_limit_;
         private Population pop;
         private int popsize;
+        private boolean isMultimodal;
+        private boolean hasStructure;
+        private boolean isSeparable;
+
         public player14() {
                 rnd_ = new Random();
         }
@@ -31,9 +36,12 @@ public class player14 implements ContestSubmission {
                 // Property keys depend on specific evaluation
                 // E.g. double param =
                 // Double.parseDouble(props.getProperty("property_name"));
-                boolean isMultimodal = Boolean.parseBoolean(props.getProperty("Multimodal"));
-                boolean hasStructure = Boolean.parseBoolean(props.getProperty("Regular"));
-                boolean isSeparable = Boolean.parseBoolean(props.getProperty("Separable"));
+                isMultimodal = Boolean.parseBoolean(props.getProperty("Multimodal"));
+                hasStructure = Boolean.parseBoolean(props.getProperty("Regular"));
+                isSeparable = Boolean.parseBoolean(props.getProperty("Separable"));
+                // System.out.println("isMultimodal:"+isMultimodal);
+                // System.out.println("hasStructure:"+hasStructure);
+                // System.out.println("isSeparable:"+isSeparable);
                 // Do sth with property values, e.g. specify relevant settings of your
                 // algorithm
                 if (isMultimodal) {
@@ -52,7 +60,7 @@ public class player14 implements ContestSubmission {
                                 child[j] = rnd_.nextDouble() * 10 - 5;
                         }
                         Individual newIndividual = new Individual(child);
-                        newIndividual.setFitness((double) evaluation_.evaluate(child));
+                        newIndividual.setFitness((double) evaluation_.evaluate(Utils.FormatGene(child)));
                         pop.addIndividual(newIndividual);
                 }
         }
@@ -61,12 +69,55 @@ public class player14 implements ContestSubmission {
                 // Run your algorithm here
                 int evals = 0;
                 // init population, population size is 10
-                this.popsize = 10;
+                int sizeOfT = 10;
+                int popsize= 100;
+                double pIndMutationProb = 0.45, pDimMutationProb = 0.3, crossoverIndProb = 1.0, crossoverDimProb = 0.9,
+                                mixRate = 0.5, msigma = 2; // Parameters
+                if (!isMultimodal && hasStructure && isSeparable) {   // Parameters for SphereEvaluation
+                        popsize=100;
+                        sizeOfT=4;
+                        pIndMutationProb = 0.3;
+                        pDimMutationProb = 0.5;
+                        crossoverIndProb = 1.0;
+                        crossoverDimProb = 1;
+                        mixRate = 0.5;
+                        msigma = 0.1;
+                }
+                if (!isMultimodal && !hasStructure && !isSeparable) { // Parameters for BentCigarFunction
+                        popsize=200;
+                        sizeOfT=6;
+                        pIndMutationProb = 0.3;
+                        pDimMutationProb = 0.8;
+                        crossoverIndProb = 1.0;
+                        crossoverDimProb = 0.6;
+                        mixRate = 0.5;
+                        msigma = 0.02;
+                }
+                if (isMultimodal && hasStructure && !isSeparable) { //Parameters for SchaffersEvaluation
+                        popsize=1000;
+                        sizeOfT=4;
+                        pIndMutationProb = 0.45;
+                        pDimMutationProb = 0.8;
+                        crossoverIndProb = 1.0;
+                        crossoverDimProb = 0.5;
+                        mixRate = 0.5;
+                        msigma = 0.02;
+                }
+                if (isMultimodal && !hasStructure && !isSeparable) { //Parameters for KatsuuraEvaluation
+                        popsize=1000;
+                        sizeOfT=4;
+                        pIndMutationProb = 0.45;
+                        pDimMutationProb = 0.8;
+                        crossoverIndProb = 1.0;
+                        crossoverDimProb = 0.5;
+                        mixRate = 0.5;
+                        msigma = 0.02;
+                }
+                this.popsize = popsize;
                 this.InitPopulation();
-                int sizeOfT = 4;
-                double p_mutation = 0.2, p_crossover = 1, mixRate = 0.5, msigma = 0.02; // Parameters
-                EvoAlgorithm evo = new EvoAlgorithm(pop, evaluation_, p_mutation, p_crossover, evaluations_limit_ - this.popsize,
-                                sizeOfT, mixRate, msigma);
+                EvoAlgorithm evo = new EvoAlgorithm(pop, evaluation_, pIndMutationProb, pDimMutationProb,
+                                crossoverIndProb, crossoverDimProb, evaluations_limit_ - this.popsize-1, sizeOfT, mixRate,
+                                msigma);
                 evo.run();
         }
 }
