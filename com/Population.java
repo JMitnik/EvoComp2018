@@ -53,7 +53,9 @@ public class Population {
         public double[] getGeneFori(int i) {
                 return get(i).getGenes();
         }
-
+        public double[] getSigmasFori(int i) {
+                return get(i).getSigmas();
+        }
         public int size() {
                 return population.size();
         }

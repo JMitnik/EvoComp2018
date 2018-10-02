@@ -19,12 +19,12 @@ public class Utils {
         else
             return dadAndMom[0];
     }
-    public static double[] FormatGene(double[] child){
-        double formated_child[]={ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
-        for(int i=0;i<child.length;i++){
-          // formated_child[i]=Double.parseDouble(String.format("%.4g%n",child[i]));
-           formated_child[i]=child[i];
+    public static String FormatGene(double[] child){
+        String geneString="";
+        for(int i=0;i<10;i++){
+           geneString+=(String.format("%.4g%n",child[i]));
+           // formated_child[i]=child[i];
         }
-        return formated_child;
+        return geneString;
     }
 }

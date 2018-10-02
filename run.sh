@@ -12,6 +12,6 @@ echo "evaluation=BentCigarFunction:"
 java -jar testrun.jar -submission=player14 -evaluation=BentCigarFunction -seed=1
 echo "evaluation=SchaffersEvaluation:(isMultimodal,hasStructure)"
 java -jar testrun.jar -submission=player14 -evaluation=SchaffersEvaluation -seed=1
-# echo "evaluation=KatsuuraEvaluation:(isMultimodal)"
-# java -jar testrun.jar -submission=player14 -evaluation=KatsuuraEvaluation -seed=1
+echo "evaluation=KatsuuraEvaluation:(isMultimodal)"
+java -jar testrun.jar -submission=player14 -evaluation=KatsuuraEvaluation -seed=1
 rm player14.class ./com/EvoAlgorithm.class ./com/Individual.class ./com/Population.class ./com/Utils.class
