@@ -3,6 +3,7 @@ package com;
 import java.util.*;
 import com.*;
 import org.vu.contest.ContestEvaluation;
+import org.ejml.simple.*;
 
 public class EvoAlgorithm {
         private static int DIM = 10;
@@ -24,7 +25,7 @@ public class EvoAlgorithm {
         private int eval_limits;
         private double msigma;
         private double mixRate;
-
+        private SimpleMatrix a = new SimpleMatrix(2,2);
         public EvoAlgorithm(Population population, ContestEvaluation e, double pIndMutationProb,
                         double pDimMutationProb, double crossoverIndProb, double crossoverDimProb, int eval_limits,
                         int sizeOfT, double mixRate, double msigma) {
