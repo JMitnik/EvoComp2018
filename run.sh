@@ -1,6 +1,7 @@
 #!/bin/sh
 clear
-export LD_LIBRARY_PATH=~/EvoComp2018/
+# each ppl has different PATH
+# export LD_LIBRARY_PATH=~/EvoComp2018/
 javac  com/Individual.java
 javac -cp . com/Population.java
 javac -cp . com/Utils.java
