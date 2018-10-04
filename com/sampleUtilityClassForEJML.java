@@ -30,15 +30,40 @@ import org.ejml.dense.row.factory.DecompositionFactory_DDRM;
 
 class sampleUtilityClassForEJML {
     // simply transpose, will not change a's value
+
+    /**
+     * Returns a new Simplematrix with the columns and rows of a transposes.
+     * @param a
+     * @return
+     */
     public static SimpleMatrix transpose(SimpleMatrix a) {
         return a.transpose();
     }
+
+    
     // multiply a*b, without alter any of their values
+
+    /**
+     * Returns a new Simplematrix with the columns of 'a' multiplied with 'b'.
+     * - Does not alter the original matrices
+     * 
+     * @pre Matrix a and b have dimensions matchin the following: (n * m) * (m * p)
+     * @post A matrix with dimensions (n * p) has been returned
+     * @param a
+     * @param b
+     * @return SimpleMatrix
+     */
     public static SimpleMatrix multiply(SimpleMatrix a, SimpleMatrix b) {
         return a.mult(b);
     }
 
     // get the inside DDRM array
+
+    /**
+     * Returns a Procedural DDDRM reprsentation of 'a' for more low-level operations.
+     * @param a
+     * @return DMatrixRaj
+     */
     public static DMatrixRMaj getDDRM(SimpleMatrix a) {
         return a.getDDRM();
     }
@@ -46,6 +71,15 @@ class sampleUtilityClassForEJML {
     // EVD only for symmetric matrix
     // B and D is the eigenvector matrix and the eigenvalue matrix, created out of the function
     // this funciton will not change a's value, meantime create side effect of filling B and D with results
+
+    /**
+     * Decomposes the matrix A into a matrix with its eigen-values on the diagonal (D) and
+     * its eigen-vectors as columns of a matrix B.
+     * - Does not change A, changes B and D in-place.
+     * @param a
+     * @param B
+     * @param D
+     */
     public static void EVDFactorize(SimpleMatrix a, SimpleMatrix B, SimpleMatrix D) {
         SimpleMatrix aCopy = a.copy();
         EigenDecomposition_F64<DMatrixRMaj> eig = DecompositionFactory_DDRM.eig(a.numRows(), true, true);
@@ -55,46 +89,121 @@ class sampleUtilityClassForEJML {
         return;
     }
 
-    // returns a vector of shape (dim, 1) drawn from the N(0, cov).
+    /**
+     * Returns a new vector(n=dim, m=1) drawn from N(0, cov).
+     * @param cov
+     * @param rand
+     * @return
+     */
     public static SimpleMatrix randomNormal(SimpleMatrix cov, Random rand) {
         return SimpleMatrix.randomNormal(cov, rand);
     }
-    // concat A and B column-wise, without change any of their value
+    /**
+     * Returns a new matrix with the concatenated columns of A and B
+     * Does not mutate the original matrices
+     * @param A
+     * @param B
+     * @return SimpleMatrix
+     */
     public static SimpleMatrix concatColumns(SimpleMatrix A, SimpleMatrix B) {
         return A.concatColumns(B);
     }
-    // concat A and B row-wise, without change any of their value
+
+    /**
+     * Returns a new matrix with the concatenated rows of A and B
+     * Does not mutate the original matrices
+     * @param A
+     * @param B
+     * @return SimpleMatrix
+     */
     public static SimpleMatrix concatRows(SimpleMatrix A, SimpleMatrix B) {
         return A.concatRows(B);
     }
-    // extract rows of A, equivalent to A[begin:end, :]
+
+    /**
+     * Returns the rows of matrix A, from 'begin' to 'end'.
+     * Equivalent to A[begin:end, :]
+     * @param A
+     * @param begin
+     * @param end
+     * @return
+     */
     public static SimpleMatrix rows(SimpleMatrix A, int begin, int end) {
         return A.rows(begin, end);
     }
-    // extract columns of A, equivalent to A[:, begin:end]
 
+
+    /**
+     * Returns the columns of matrix A, from 'begin' to 'end'.
+     * Equivalent to A[:, begin:end]
+     * @param A
+     * @param begin
+     * @param end
+     * @return
+     */
     public static SimpleMatrix cols(SimpleMatrix A, int begin, int end) {
         return A.cols(begin, end);
     }
 
+    /**
+     * Sets the cell-value of matrix A at 'row' and 'col' to 'val'
+     * @param A
+     * @param row
+     * @param col
+     * @param val
+     */
     public static void set(SimpleMatrix A, int row, int col, double val) {
         A.set(row, col, val);
     }
-    // set a rectangle part of A to be the values of B, eq to A[i:i+B.numRows, j:j+B.numCols]=B
+
+    /**
+     * Sets a rectangle of A to be values of B. 
+     * - Where i and j denote the start coordinates.
+     * - And B denotes the sub-matrix to insert from those coordinates
+     * Equivalent to A[i:i+B.numRows, j:j+B.numCols]=B
+     * @param i
+     * @param j
+     * @param A
+     * @param B
+     */
     public static void setValuesInBulk(int i, int j, SimpleMatrix A, SimpleMatrix B) {
         A.insertIntoThis(i, j, B);
         return;
     }
+
+
     // plus alpha*B to A, without change the value of parameter, eq to A+=alpha*B
+
+    /**
+     * Creates a new Simplematrix with the values of A plus a scalar alpha * matrix B.
+     * @pre A and B are the same dimensions
+     * @param alpha
+     * @param A
+     * @param B
+     * @return
+     */
     public static SimpleMatrix plus(double alpha, SimpleMatrix A, SimpleMatrix B) {
         return A.plus(alpha, B);
     }
-    // inplace version of add a vector to some row of matrix, eq to A[row, :]+=b
+
+    /**
+     * Adds a vector 'b' to a specific row of index 'row' of a matrix.
+     * Equivalent to A[row, :]+=b
+     * Does this inplace, and mutates the original matrix!
+     * @param A
+     * @param row
+     * @param b
+     */
     public static void addVectorToRow(SimpleMatrix A, int row, SimpleMatrix b) {
         A.insertIntoThis(row, 0, A.rows(row, row + 1).plus(b));
         return;
     }
 
+    /**
+     * Returns a matrix with the eigen-values of eigen-decomposition 'eig' in the diagonals of D.
+     * @param eig
+     * @param D
+     */
     private static void makeDiag(EigenDecomposition_F64<DMatrixRMaj> eig, SimpleMatrix D) {
         int numEigen = eig.getNumberOfEigenvalues();
         for (int i = 0; i < eig.getNumberOfEigenvalues(); i++) {
@@ -103,8 +212,14 @@ class sampleUtilityClassForEJML {
         return;
     }
 
+    /**
+     * Returns a matrix with the eigen-vectors belonging to the eigen-values of 'eig' as the columns of B.
+     * @param eig
+     * @param B
+     */
     private static void makeEigenVectors(EigenDecomposition_F64<DMatrixRMaj> eig, SimpleMatrix B) {
         int numEigen = eig.getNumberOfEigenvalues();
+
         for (int i = 0; i < eig.getNumberOfEigenvalues(); i++) {
             B.insertIntoThis(0, i, SimpleMatrix.wrap(eig.getEigenVector(i)));
         }
@@ -125,6 +240,7 @@ class sampleUtilityClassForEJML {
         c.print();
         a.print();
         randomNormal(multiply(a, transpose(a)), rand).print();
+
         // third method, directly call the new operator with passing the numRows and numCols
         SimpleMatrix B = new SimpleMatrix(2, 2);
         SimpleMatrix D = new SimpleMatrix(2, 2);
