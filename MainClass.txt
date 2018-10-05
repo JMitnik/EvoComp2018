@@ -1,1 +1,2 @@
 Main-Class: player14
+Class-Path: ./ejml/ejml-simple-0.36.jar ./ejml/ejml-core-0.36.jar ./ejml/ .
