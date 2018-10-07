@@ -69,7 +69,8 @@ public void run() {
         int evals = 0;
         // init population, population size is 10
         int sizeOfT = 10;
-        int popsize= 100;
+        int popsize= 100;        
+        System.out.print(test);
         double pIndMutationProb = 0.45, pDimMutationProb = 0.3, crossoverIndProb = 1.0, crossoverDimProb = 0.9,
                mixRate = 0.5, msigma = 2;                  // Parameters
         if (!isMultimodal && hasStructure && isSeparable) {           // Parameters for SphereEvaluation
