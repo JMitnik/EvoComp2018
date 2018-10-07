@@ -1,45 +1,46 @@
 package com;
 
-import com.Individual;
 import java.util.ArrayList;
+import org.vu.contest.ContestEvaluation;
+import org.ejml.simple.*;
+
 
 public class Population {
-        private ArrayList<Individual> population = null;
+        private static int DIM = 10;
+        // (populationSize, DIM), normalized samples
+        private SimpleMatrix yi;
+        // (populationSize, DIM), unnormalized samples
+        private SimpleMatrix xi;
+        // (topmu, DIM), topmu scored inds
+        private SimpleMatrix yimu;
+        // (1, DIM), mean of the topmu scored inds
+        private SimpleMatrix yw;
+        // of length topmu, indices of the topmu inds in the sorted population according to scores
+        private int[] indices;
+        // of length populationSize, probably used
+        private double[] scores;
 
-        public Population() {
-                this.population = new ArrayList<Individual>();
+        private int populationSize;
+        private int topmu;
+        public Population(int populationSize, int topmu, ContestEvaluation e, SimpleMatrix m, SimpleMatrix C,
+                        double sigma) {
+                this.populationSize = populationSize;
+                this.topmu = topmu;
+                // 1. sample the matrix yi, xi, first yi then xi
+
+                // 2. evaluate the matrix xi, get the `score`, then sort it to `indices`, 
+                // probably use the heap sort since we only need the topK
+
+                // 3. extract the topK inds into `yimu` for later use
+
+                // 4. calc the `yw` to be the mean of `yimu`
         }
 
-        public void addIndividual(Individual newIndividual) {
-                this.population.add(newIndividual);
+        public SimpleMatrix getYw() {
+                return yw;
+        }
+        public SimpleMatrix getYimu() {
+                return yimu;
         }
 
-        public ArrayList<Individual> getPopulation() {
-                return population;
-        }
-
-        public Individual get(int i) {
-                return population.get(i);
-        }
-
-        public double getFitnessFori(int i) {
-                return get(i).getFitness();
-        }
-
-        public double[] getGeneFori(int i) {
-                return get(i).getGenes();
-        }
-
-        public int size() {
-                return population.size();
-        }
-
-        public void setPopulation(ArrayList<Individual> population) {
-                this.population = population;
-        }
-
-        public void setFitnessFori(int i, double fitness) {
-                get(i).setFitness(fitness);
-                return;
-        }
 }
