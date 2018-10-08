@@ -5,5 +5,5 @@ export LD_LIBRARY_PATH=~/EvoComp2018/
 ## Test the program with
 
 ```bash
-sudo bash run.sh
+python autorun.py
 ```
