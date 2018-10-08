@@ -1,9 +1,9 @@
 #!/bin/sh
 export LD_LIBRARY_PATH=~/EvoComp2018/
 # bash compile.sh
-if [ $# -eq 5 ]
+if [ $# -eq 3 ]
 then
-   java -Dpopsize=$2 -Dtsize=$3 -Dpm=$4 -Dpc=$5 -jar testrun.jar -submission=player14 -evaluation=$1 -seed=1
+   java -Dpopsize=$2 -Dtsize=$3 -jar testrun.jar -submission=player14 -evaluation=$1 -seed=1
 else
   if [ $1 = 'compile' ]
   then

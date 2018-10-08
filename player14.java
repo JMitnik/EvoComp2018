@@ -72,10 +72,8 @@ public void run() {
         int popsize= 100;
         double pIndMutationProb=1,pDimMutationProb=1,crossoverIndProb=1,crossoverDimProb=1,mixRate=1, msigma=1;     // Parameters
         if (!isMultimodal && hasStructure && isSeparable) {           // Parameters for SphereEvaluation
-                popsize=1000;
+                popsize=500;
                 sizeOfT=100;
-                pIndMutationProb = 0.8;
-                pDimMutationProb = 1;
                 crossoverIndProb = 1.0;
                 crossoverDimProb = 0.8;
                 mixRate = 0.5;
@@ -83,26 +81,22 @@ public void run() {
         }
         if (!isMultimodal && !hasStructure && !isSeparable) {         // Parameters for BentCigarFunction              //
                 popsize=500;
-                sizeOfT=25;
-                pIndMutationProb = 0.5;
-                pDimMutationProb = 1.0;
+                sizeOfT=100;
                 crossoverIndProb = 1.0;
                 crossoverDimProb = 0.8;
                 mixRate = 0.5;
                 msigma = 0.02;
         }
         if (isMultimodal && hasStructure && !isSeparable) {         //Parameters for SchaffersEvaluation
-                popsize=1000;
-                sizeOfT=10;
-                pIndMutationProb = 0.5;
-                pDimMutationProb = 1.0;
+                popsize=2000;
+                sizeOfT=100;
                 crossoverIndProb = 1.0;
                 crossoverDimProb = 0.8;
                 mixRate = 0.5;
                 msigma = 0.1;
         }
         if (isMultimodal && !hasStructure && !isSeparable) {         //Parameters for KatsuuraEvaluation
-                popsize=2000;
+                popsize=500;
                 sizeOfT=200;
                 pIndMutationProb =0.5;
                 pDimMutationProb = 0.5;
@@ -113,17 +107,20 @@ public void run() {
         }
         try{
           popsize=(int)Double.parseDouble(System.getProperty("popsize"));
-          sizeOfT=(int)Double.parseDouble(System.getProperty("tsize"));
-          pIndMutationProb=Double.parseDouble(System.getProperty("pm"));
-          crossoverIndProb=Double.parseDouble(System.getProperty("pc"));
+
         }
         catch (Exception e) {
         }
+        try{
+          sizeOfT=(int)Double.parseDouble(System.getProperty("tsize"));
+        }
+        catch (Exception e) {}
         this.popsize = popsize;
         this.InitPopulation();
         EvoAlgorithm evo = new EvoAlgorithm(pop, evaluation_, pIndMutationProb, pDimMutationProb,
                                     crossoverIndProb, crossoverDimProb, evaluations_limit_ - this.popsize-1, sizeOfT, mixRate,
                                     msigma);
         evo.run();
+        // System.out.print(pIndMutationProb);
 }
 }
