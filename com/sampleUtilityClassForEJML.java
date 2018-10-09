@@ -40,7 +40,11 @@ class sampleUtilityClassForEJML {
         return a.transpose();
     }
 
-    
+    public static double normF(SimpleMatrix x) {
+        return s.normF();
+    }
+
+
     // multiply a*b, without alter any of their values
 
     /**
@@ -89,6 +93,17 @@ class sampleUtilityClassForEJML {
         return;
     }
 
+    public static SimpleMatrix getHalfInverse(SimpleMatrix a) {
+        SimpleMatrix aCopy = a.copy();
+        EigenDecomposition_F64<DMatrixRMaj> eig = DecompositionFactory_DDRM.eig(a.numRows(), true, true);
+        eig.decompose(aCopy.getDDRM());
+        SimpleMatrix DInvSqrt = new SimpleMatrix(a.numRows(), a.numRows());
+        SimpleMatrix B = new SimpleMatrix(a.numRows(), a.numRows());
+        makeInverseSqrtDiag(eig, DInvSqrt);
+        makeEigenVectors(eig, B);
+
+        return B.mult(DInvSqrt).mult(B.transpose());
+    }
     /**
      * Returns a new vector(n=dim, m=1) drawn from N(0, cov).
      * @param cov
@@ -97,6 +112,10 @@ class sampleUtilityClassForEJML {
      */
     public static SimpleMatrix randomNormal(SimpleMatrix cov, Random rand) {
         return SimpleMatrix.randomNormal(cov, rand);
+    }
+    
+    public static SimpleMatrix randomDDRM(int numRows, int numCols, double minVal, double maxVal, Random rand) {
+      return SimpleMatrix.random_DDRM(numRows, numCols, minVal, maxVal, rand);
     }
     /**
      * Returns a new matrix with the concatenated columns of A and B
@@ -199,6 +218,14 @@ class sampleUtilityClassForEJML {
         return;
     }
 
+    public static SimpleMatrix diag(int dim) {
+        SimpleMatrix res = new SimpleMatrix(dim, dim);
+        for(int i=0; i<dim;i++){
+            res.set(i, i, 1);
+        }
+        return res;
+    }
+    
     /**
      * Returns a matrix with the eigen-values of eigen-decomposition 'eig' in the diagonals of D.
      * @param eig
@@ -208,6 +235,18 @@ class sampleUtilityClassForEJML {
         int numEigen = eig.getNumberOfEigenvalues();
         for (int i = 0; i < eig.getNumberOfEigenvalues(); i++) {
             D.set(i, i, eig.getEigenvalue(i).real);
+        }
+        return;
+    }
+    /**
+     * Returns a matrix with the inverse sqrt eigen-values of eigen-decomposition 'eig' in the diagonals of D.
+     * @param eig
+     * @param D
+     */
+    private static void makeInverseSqrtDiag(EigenDecomposition_F64<DMatrixRMaj> eig, SimpleMatrix D) {
+        int numEigen = eig.getNumberOfEigenvalues();
+        for (int i = 0; i < eig.getNumberOfEigenvalues(); i++) {
+            D.set(i, i, Math.sqrt(1/(eig.getEigenvalue(i).real)));
         }
         return;
     }

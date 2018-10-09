@@ -39,8 +39,14 @@ public class Population {
         public SimpleMatrix getYw() {
                 return yw;
         }
+
         public SimpleMatrix getYimu() {
                 return yimu;
         }
-
+        // mean vector along the first dim
+        private SimpleMatrix mean(SimpleMatrix a) {
+                SimpleMatrix ones = new SimpleMatrix(a.numCols, 1);
+                SimpleMatrix sum = a.mult(ones);
+                return sum.divide(a.getRows);
+        }
 }
