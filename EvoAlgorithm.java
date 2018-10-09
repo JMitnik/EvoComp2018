@@ -37,6 +37,7 @@ private int evals;
 private int eval_limits;
 
 private SimpleMatrix cov;
+private SimpleMatrix cov_mu;
 private SimpleMatrix xmean;
 
 private SimpleMatrix y;
@@ -65,18 +66,18 @@ public void Initialize(){
         //calc weights
         weights=new double[mu];
         double sum=0;
-        for(int i=0;i<mu;i++){
-          weights[i]=Math.log(mu/(i+1));
-          sum+=weights[i];
+        for(int i=0; i<mu; i++) {
+                weights[i]=Math.log(mu/(i+1));
+                sum+=weights[i];
         }
         //Normalize weights
-        for(int i=0;i<mu;i++){
-          weights[i]=weights[i]/sum;
+        for(int i=0; i<mu; i++) {
+                weights[i]=weights[i]/sum;
         }
         //calc mu_w=1/sum{w^2}
         mu_w=0;
-        for(int i=0;i<mu;i++){
-          mu_w+=(weights[i]*weights[i]);
+        for(int i=0; i<mu; i++) {
+                mu_w+=(weights[i]*weights[i]);
         }
         mu_w=1/mu_w;
 
@@ -110,48 +111,56 @@ public void CalculateFitness(){
 // {i=1}^\mu*wi y_{i:λ}
 // update mean
 public void updateMean() {
-  //Sort the fitness
-  //very basic bubble sort but easy to get the index
-  int index[]=new int[lambda];int tmp_index;
-  double data[]=new double[lambda];double tmp;
-  for(int i=0; i<lambda; i++){
-    index[i]=i;
-    data[i]=fitness[i];
-  }
-  for(int i=0; i<lambda-1; i++) {
-          for(int j=0; j<lambda-1-i; j++) {
-                  if(data[j]<data[j+1]) {
-                          tmp=data[j];
-                          data[j]=data[j+1];
-                          data[j+1]=tmp;
-                          tmp_index=index[j];
-                          index[j]=index[j+1];
-                          index[j+1]=tmp_index;
-                  }
-          }
-  }
-  // System.out.println("max:"+fitness[index[0]]);
-  //extract the y vectors for the top mu individuals
-  y_topmu=y.extractVector(false,index[0]);
-  for(int i=1; i<mu; i++) {
-          SimpleMatrix y_i=y.extractVector(false,index[i]);
-          y_topmu=y_topmu.combine(0,y_topmu.numCols(),y_i);
-  }
-  //calc the y_w, which will be used multiple times below
-  y_w=new SimpleMatrix(DIM,1);
-  //y_w=sum{y_i*weights[i]}
-  for(int i=0;i<mu;i++){
-    SimpleMatrix y_i=y_topmu.extractVector(false,i);
-    y_w=y_w.plus(y_i.scale(weights[i]));
-  }
-  //xmean=xmean+sigma*y_w
-  xmean=xmean.plus(y_w.scale(sigma));
+        //Sort the fitness
+        //very basic bubble sort but easy to get the index
+        int index[]=new int[lambda]; int tmp_index;
+        double data[]=new double[lambda]; double tmp;
+        for(int i=0; i<lambda; i++) {
+                index[i]=i;
+                data[i]=fitness[i];
+        }
+        for(int i=0; i<lambda-1; i++) {
+                for(int j=0; j<lambda-1-i; j++) {
+                        if(data[j]<data[j+1]) {
+                                tmp=data[j];
+                                data[j]=data[j+1];
+                                data[j+1]=tmp;
+                                tmp_index=index[j];
+                                index[j]=index[j+1];
+                                index[j+1]=tmp_index;
+                        }
+                }
+        }
+        // System.out.println("max:"+fitness[index[0]]);
+        //extract the y vectors for the top mu individuals
+        y_topmu=y.extractVector(false,index[0]);
+        for(int i=1; i<mu; i++) {
+                SimpleMatrix y_i=y.extractVector(false,index[i]);
+                y_topmu=y_topmu.combine(0,y_topmu.numCols(),y_i);
+        }
+        //calc the y_w, which will be used multiple times below
+        y_w=new SimpleMatrix(DIM,1);
+        //y_w=sum{y_i*weights[i]}
+        for(int i=0; i<mu; i++) {
+                SimpleMatrix y_i=y_topmu.extractVector(false,i);
+                y_w=y_w.plus(y_i.scale(weights[i]));
+        }
+        //xmean=xmean+sigma*y_w
+        xmean=xmean.plus(y_w.scale(sigma));
 
 }
 
 // cumulation for C
 public void evolutionPathForC() {
-
+        //calculate p_c
+        p_c=p_c.scale(1-c_c).plus(y_w.scale(Math.sqrt(1-(1-c_c)*(1-c_c))*Math.sqrt(mu_w)));
+        //calculate C_mu for Rank mu update
+        cov_mu=new SimpleMatrix(DIM,DIM);
+        for(int i=0; i<mu; i++) {
+                SimpleMatrix y_i=y_topmu.extractVector(false,i);
+                SimpleMatrix yiyit=y_i.mult(y_i.transpose());
+                cov_mu=cov_mu.plus(yiyit.scale(weights[i]));
+        }
 }
 // cumulation for \sigma
 public void evolutionPathForSigma() {
@@ -163,18 +172,11 @@ public void evolutionPathForSigma() {
 
 // update C
 public void updateCovariance() {
-        // will mainly use three operator, transpose, matrix product, and mean wrt the first axi
-
-        p_c=p_c.scale(1-c_c).plus(y_w.scale(Math.sqrt(1-(1-c_c)*(1-c_c))*Math.sqrt(mu_w)));
-        SimpleMatrix ppt=p_c.mult(p_c.transpose());
-        //Rank mu update
-        SimpleMatrix Cov_mu=new SimpleMatrix(DIM,DIM);
-        for(int i=0;i<mu;i++){
-          SimpleMatrix y_i=y_topmu.extractVector(false,i);
-          SimpleMatrix yiyit=y_i.mult(y_i.transpose());
-          Cov_mu=Cov_mu.plus(yiyit.scale(weights[i]));
-        }
-        cov=cov.scale(1-c_1-c_mu).plus(ppt.scale(c_1)).plus(Cov_mu.scale(c_mu));
+  SimpleMatrix ppt=p_c.mult(p_c.transpose());
+  //Rank-one update
+  // cov=cov.scale(1-c_1).plus(ppt.scale(c_1));
+  //Rank-mu update
+  cov=cov.scale(1-c_1-c_mu).plus(ppt.scale(c_1)).plus(cov_mu.scale(c_mu));
 
 }
 // update of σ
@@ -190,7 +192,7 @@ public void run() {
                 SampleNewGeneration();
                 CalculateFitness();
                 updateMean();
-                // evolutionPathForC();
+                evolutionPathForC();
                 // evolutionPathForSigma();
                 updateCovariance();
                 // updateSigma();
