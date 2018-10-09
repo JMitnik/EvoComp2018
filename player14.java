@@ -9,6 +9,10 @@ Random rnd_;
 ContestEvaluation evaluation_;
 private int evaluations_limit_;
 private int popSize;
+private double sigma;
+boolean isMultimodal;
+boolean hasStructure;
+boolean isSeparable;
 public player14()
 {
         rnd_ = new Random();
@@ -31,9 +35,9 @@ public void setEvaluation(ContestEvaluation evaluation)
         evaluations_limit_ = Integer.parseInt(props.getProperty("Evaluations"));
         // Property keys depend on specific evaluation
         // E.g. double param = Double.parseDouble(props.getProperty("property_name"));
-        boolean isMultimodal = Boolean.parseBoolean(props.getProperty("Multimodal"));
-        boolean hasStructure = Boolean.parseBoolean(props.getProperty("Regular"));
-        boolean isSeparable = Boolean.parseBoolean(props.getProperty("Separable"));
+        isMultimodal = Boolean.parseBoolean(props.getProperty("Multimodal"));
+        hasStructure = Boolean.parseBoolean(props.getProperty("Regular"));
+        isSeparable = Boolean.parseBoolean(props.getProperty("Separable"));
 
         // Do sth with property values, e.g. specify relevant settings of your algorithm
         if(isMultimodal) {
@@ -45,8 +49,11 @@ public void setEvaluation(ContestEvaluation evaluation)
 
 public void run()
 {
-        popSize=20;
-        EvoAlgorithm evo=new EvoAlgorithm(rnd_,evaluation_,evaluations_limit_,popSize);
+        if (!isMultimodal && hasStructure && isSeparable) {popSize=20;sigma=1; }        // Parameters for SphereEvaluation
+        if (!isMultimodal && !hasStructure && !isSeparable) {popSize=20;sigma=0.85; }      // Parameters for BentCigarFunction
+        if (isMultimodal && hasStructure && !isSeparable) {popSize=100;sigma=1; }        //Parameters for SchaffersEvaluation
+        if (isMultimodal && !hasStructure && !isSeparable) {popSize=100; sigma=1;}       //Parameters for KatsuuraEvaluation
+        EvoAlgorithm evo=new EvoAlgorithm(rnd_,evaluation_,evaluations_limit_,popSize,sigma);
         evo.run();
 }
 }

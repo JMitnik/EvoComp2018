@@ -1,9 +1,10 @@
 import java.util.*;
 import org.vu.contest.ContestEvaluation;
 import org.ejml.simple.*;
+import org.ejml.data.*;
 public class EvoAlgorithm {
 private static int DIM = 10;
-private static double gammaExp = 3.084327759799864;
+// private static double gammaExp = 3.084327759799864;
 private ContestEvaluation e;
 
 //lambda-->populaton size/offspring number
@@ -18,15 +19,17 @@ private double mu_w;
 private double sigma;
 
 // c_c
-private double c_c = 4 / DIM;
+private double c_c;
 // c_sigma
-private double c_sigma = 4 / DIM;
+private double c_sigma;
 // c_1
-private double c_1 = 2 / DIM / DIM;
+private double c_1;
 // c_mu
 private double c_mu;
 // d_\sigma
-private double dsigma;
+private double d_sigma;
+//E(N(0,I))
+private double E;
 
 
 // fitness
@@ -38,6 +41,7 @@ private int eval_limits;
 
 private SimpleMatrix cov;
 private SimpleMatrix cov_mu;
+private SimpleMatrix cov_invsqrt;
 private SimpleMatrix xmean;
 
 private SimpleMatrix y;
@@ -49,18 +53,20 @@ private SimpleMatrix p_c;
 private SimpleMatrix p_sigma;
 private Random rnd;
 
-public EvoAlgorithm(Random rnd,ContestEvaluation e,int eval_limits,int popSize) {
+public EvoAlgorithm(Random rnd,ContestEvaluation e,int eval_limits,int popSize,double sigma) {
         this.rnd=rnd;
         this.e = e;
         evals = 0;
         this.eval_limits = eval_limits;
         this.lambda = popSize;
+        this.sigma=sigma;
 }
 public void Initialize(){
         cov=SimpleMatrix.identity(DIM);                 //cov is initialized into identity matrix
-        sigma=0.3;                                        //stepsize equals to 1 at the beginning
-        xmean=SimpleMatrix.random_DDRM(DIM,1,-5,5,rnd); //mean vector is initialized randomly
-
+        c_sigma=(4.0/DIM);
+        d_sigma=3;                                       //stepsize equals to 1 at the beginning
+        // xmean=SimpleMatrix.random_DDRM(DIM,1,-5,5,rnd); //mean vector is initialized randomly
+        xmean=new SimpleMatrix(DIM,1);
         // Parameter setting for Selection
         mu=(int)Math.floor(lambda/2);
         //calc weights
@@ -83,18 +89,27 @@ public void Initialize(){
 
         // Parameter setting for Evolution
         p_c=new SimpleMatrix(10,1);
+        p_sigma=new SimpleMatrix(10,1);
+        c_c= 4.0 / DIM;
+        c_1= 2.0/DIM/DIM;
         c_mu=mu_w/DIM/DIM;
+        E=Math.sqrt(DIM)*(1-1/(4*DIM)+1/(21*DIM*DIM));
 }
 
 // xi = m + σ yi, yi ∼ Ni(0, C), for i = 1, . . . , λ sampling
 public void SampleNewGeneration() {
-        y=SimpleMatrix.randomNormal(cov,rnd);                  //y ~ N(0, C)  first element
-        populaton=xmean.plus(y.scale(sigma));                        //x = m + sigma * y   first element
-        for(int i=1; i<lambda; i++) {                                         //pop [rows = DIM , cols = lambda ]
-                SimpleMatrix y_i=SimpleMatrix.randomNormal(cov,rnd);
-                SimpleMatrix x_i=xmean.plus(y_i.scale(sigma));
-                y=y.combine(0,y.numCols(),y_i);
-                populaton=populaton.combine(0,populaton.numCols(),x_i);
+        try{
+            y=SimpleMatrix.randomNormal(cov,rnd);                  //y ~ N(0, C)  first element
+            populaton=xmean.plus(y.scale(sigma));                        //x = m + sigma * y   first element
+            for(int i=1; i<lambda; i++) {                                         //pop [rows = DIM , cols = lambda ]
+                    SimpleMatrix y_i=SimpleMatrix.randomNormal(cov,rnd);
+                    SimpleMatrix x_i=xmean.plus(y_i.scale(sigma));
+                    y=y.combine(0,y.numCols(),y_i);
+                    populaton=populaton.combine(0,populaton.numCols(),x_i);
+            }
+        }
+        catch (Exception e) {
+
         }
 }
 public void CalculateFitness(){
@@ -162,28 +177,51 @@ public void evolutionPathForC() {
                 cov_mu=cov_mu.plus(yiyit.scale(weights[i]));
         }
 }
-// cumulation for \sigma
-public void evolutionPathForSigma() {
-        // the same as before, the only thing you are gonna use about the present population is y_w
-        // might need to use the C^{\frac{1}{2}}, since we are not gonna use it anymore in this iter,
-        // I guess we dont need to store the result as a special variable
-        // TODO: Implement an operator to calc C^{\frac{1}{2}} in utility class
+//calc C^(-1/2)
+public void Calc_Cov_Invsqrt(){
+  // calc cov_invsqrt
+  SimpleEVD<SimpleMatrix> Eigen=cov.eig();
+  List<Complex_F64> Eigenvalues=Eigen.getEigenvalues();
+  //B is the matrix of the eigenvectors
+  SimpleMatrix B=Eigen.getEigenVector(0);
+  for(int i=1;i<DIM;i++){
+    B=B.combine(0,B.numCols(),Eigen.getEigenVector(i));
+  }
+  //D is a diagonal matrix of the sqrt of eigenvalues
+  double D_val[]=new double[DIM];
+  for(int i=0;i<DIM;i++){
+      D_val[i]=Math.sqrt(Eigenvalues.get(i).getReal());
+  }
+  SimpleMatrix D=SimpleMatrix.diag(D_val);
+  //invert D-->D^{-1/2}
+  try{
+    D=D.invert();
+    cov_invsqrt=B.mult(D).mult(B.transpose());      //BDB'
+  }
+  catch (Exception e) {
+    //cov_invsqrt=>C^(-1/2)    not sure if it is correct T-T
+  }
 }
-
 // update C
 public void updateCovariance() {
   SimpleMatrix ppt=p_c.mult(p_c.transpose());
   //Rank-one update
   // cov=cov.scale(1-c_1).plus(ppt.scale(c_1));
-  //Rank-mu update
+  // Combining Rank-µ-Update and Cumulation
   cov=cov.scale(1-c_1-c_mu).plus(ppt.scale(c_1)).plus(cov_mu.scale(c_mu));
 
 }
 // update of σ
 public void updateSigma() {
-        // will use the norm operator
-        // a side note: E\left\norm \mathscr{N}(0, I) \right\norm is √2 Γ((n+1)/2)/Γ(n/2),
-        // the val has been calced beforehand, stored in `gammaExp`
+  Calc_Cov_Invsqrt();
+  SimpleMatrix tmp=cov_invsqrt.mult(y_w).scale(Math.sqrt(1-(1-c_sigma)*(1-c_sigma))*Math.sqrt(mu_w));
+  p_sigma=p_sigma.scale(1-c_sigma).plus(tmp);
+  double p_sigma_len=0;
+  for(int i=0;i<DIM;i++){
+    p_sigma_len+=Math.pow(p_sigma.get(i,0),2);
+  }
+  p_sigma_len=Math.sqrt(p_sigma_len);
+  sigma=sigma*Math.exp(c_sigma/d_sigma*(p_sigma_len/E-1));
 }
 public void run() {
         Initialize();
@@ -193,9 +231,8 @@ public void run() {
                 CalculateFitness();
                 updateMean();
                 evolutionPathForC();
-                // evolutionPathForSigma();
                 updateCovariance();
-                // updateSigma();
+                updateSigma();
         }
 }
 
