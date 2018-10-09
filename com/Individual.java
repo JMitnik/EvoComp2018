@@ -6,13 +6,13 @@ private double sigmas[];
 private double fitness;
 private boolean changed=false;
 public Individual() {
-        double sigmas[] = {0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1};
+        double sigmas[] = {1,1,1,1,1,1,1,1,1,1};
         this.sigmas = sigmas;
 }
 
 public Individual(double[] genes) {
         this.genes = genes;
-        double sigmas[] = {0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1};
+        double sigmas[] = {1,1,1,1,1,1,1,1,1,1};
         this.sigmas = sigmas;
 }
 

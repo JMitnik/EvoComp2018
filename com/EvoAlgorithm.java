@@ -127,6 +127,7 @@ public void Crossover_SA(double alpha) {
 
                                         if (random.nextDouble() < crossoverDimProb) {
                                                 double rndNum = random.nextDouble();
+                                                rndNum=0.5;
                                                 new_genes1[i] = singleGenes1[i] * rndNum
                                                                 + partner.getGenes()[i] * (1 - rndNum);
                                         } else {
@@ -233,36 +234,25 @@ public void nonUniformMutation(double sigma) {
  *
  * @author Robbie
  */
-public void UncorrelatedMutation(){
-        Random random = new Random();
-        // For each individual
-        for (int i = 0; i < popsize; i++) {
-                if (random.nextDouble() <= pIndMutationProb) {
-                        Individual ind = offspring.get(i);
-                        ind.setChanged();
-                        double genes[]  = ind.getGenes();
-                        double sigmas[] = ind.getSigmas();
-                        int n=popsize;
-                        double T=1/Math.sqrt(2*Math.sqrt(n));
-                        double T_prime=1/Math.sqrt(2*n);
-                        // For all alleles of their chromosome
-                        for (int j = 0; j < dim; j++) {
-                                // If pDImensionMutation
-                                if (random.nextDouble() < pDimMutationProb) {
-                                        //Mutate sigma
-                                        sigmas[j]=sigmas[j]*(Math.exp(T*random.nextGaussian()+T_prime*random.nextGaussian()));
-                                        // Set their genes between 5, -5, and add to their genes some value from
-                                        // gaussian distribution
-                                        genes[j] = Utils.clamp(genes[j] + random.nextGaussian() * sigmas[j], 5, -5);
-                                }
-                        }
-                        ind.setGenes(genes);
-                        ind.setSigmas(sigmas);
-                }
-        }
+
+public void SelfAdaptiveMutation(int Generation){
+  Random random = new Random();
+  for (int n = 0; n < popsize; n++) {
+    Individual ind = offspring.get(n);
+    ind.setChanged();
+    double genes[] = ind.getGenes();
+    double sigmas[] = ind.getSigmas();
+    double new_sigmas[]={0,0,0,0,0,0,0,0,0,0};
+    for(int i = 0; i < dim; i++){
+      new_sigmas[i] = (sigmas[i]+random.nextGaussian())*Math.exp(-Generation/2);
+    }
+    ind.setSigmas(new_sigmas);
+    for (int j = 0; j < dim; j++) {
+      genes[j] = Utils.clamp(genes[j] + random.nextGaussian() * new_sigmas[j], 5, -5);
+    }
+    ind.setGenes(genes);
+  }
 }
-
-
 /**
  * Merges two populations into one population (e.g. offspring and current
  * generation)
@@ -296,6 +286,7 @@ private Population mergePopulations(Population populationA, Population populatio
 public void selectSurvivors() {
         // Initializes containers for all of the population and survivors
         Population new_population = mergePopulations(population, offspring);
+        Random random = new Random();
         // Sorts and limits nr of population
         Collections.sort(new_population.getPopulation(), Collections.reverseOrder());
         new_population.limitNPopulation(population.getPopulation().size());
@@ -313,12 +304,10 @@ public void run() {
                 // Apply crossover / mutation operators
                 Crossover_SA(mixRate);         // Simple arithmetic crossover
                 // Crossover_WA(mixRate); // Whole arithmetic crossover
-                nonUniformMutation(realSigma);         // randomGauss(sigma)
-                // UncorrelatedMutation();
-                realSigma = Utils.exponentialDecay(msigma, evals, eval_limits);
+                // nonUniformMutation(realSigma,evals,eval_limits);         // randomGauss(sigma)
+                // realSigma = Utils.exponentialDecay(msigma, evals, eval_limits);
+                SelfAdaptiveMutation((int)Math.ceil(evals/popsize));
                 // realSigma = Utils.linearDecay(msigma, evals, eval_limits);
-                // Check fitness of unknown fuction
-
                 evaluateOffspringPool();
                 setOffspring(offspring);
                 selectSurvivors();
