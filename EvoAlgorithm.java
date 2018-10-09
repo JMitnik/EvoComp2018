@@ -152,8 +152,6 @@ public void updateMean() {
 // cumulation for C
 public void evolutionPathForC() {
 
-
-
 }
 // cumulation for \sigma
 public void evolutionPathForSigma() {
@@ -167,21 +165,20 @@ public void evolutionPathForSigma() {
 public void updateCovariance() {
         // will mainly use three operator, transpose, matrix product, and mean wrt the first axi
 
-        // tasi 4 for population: extract the first topmu inds, which has been done in tasi 2
+        p_c=p_c.scale(1-c_c).plus(y_w.scale(Math.sqrt(1-(1-c_c)*(1-c_c))*Math.sqrt(mu_w)));
+        SimpleMatrix ppt=p_c.mult(p_c.transpose());
+        //Rank mu update
+        SimpleMatrix Cov_mu=new SimpleMatrix(DIM,DIM);
+        for(int i=0;i<mu;i++){
+          SimpleMatrix y_i=y_topmu.extractVector(false,i);
+          SimpleMatrix yiyit=y_i.mult(y_i.transpose());
+          Cov_mu=Cov_mu.plus(yiyit.scale(weights[i]));
+        }
+        cov=cov.scale(1-c_1-c_mu).plus(ppt.scale(c_1)).plus(Cov_mu.scale(c_mu));
 
 }
 // update of σ
 public void updateSigma() {
-  p_c=p_c.scale(1-c_c).plus(y_w.scale(Math.sqrt(1-(1-c_c)*(1-c_c))*Math.sqrt(mu_w)));
-  SimpleMatrix ppt=p_c.mult(p_c.transpose());
-  //Rank mu update
-  SimpleMatrix Cov_mu=new SimpleMatrix(DIM,DIM);
-  for(int i=0;i<mu;i++){
-    SimpleMatrix y_i=y_topmu.extractVector(false,i);
-    SimpleMatrix yiyit=y_i.mult(y_i.transpose());
-    Cov_mu=Cov_mu.plus(yiyit.scale(weights[i]));
-  }
-  cov=cov.scale(1-c_1-c_mu).plus(ppt.scale(c_1)).plus(Cov_mu.scale(c_mu));
         // will use the norm operator
         // a side note: E\left\norm \mathscr{N}(0, I) \right\norm is √2 Γ((n+1)/2)/Γ(n/2),
         // the val has been calced beforehand, stored in `gammaExp`
@@ -193,10 +190,10 @@ public void run() {
                 SampleNewGeneration();
                 CalculateFitness();
                 updateMean();
-                evolutionPathForC();
-                evolutionPathForSigma();
+                // evolutionPathForC();
+                // evolutionPathForSigma();
                 updateCovariance();
-                updateSigma();
+                // updateSigma();
         }
 }
 
