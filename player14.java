@@ -48,56 +48,32 @@ public class player14 implements ContestSubmission {
                 }
         }
 
-        public void InitPopulation() {
-                // init population and calculate fitness
-                this.pop = new Population();
-                for (int i = 0; i < this.popsize; i++) {
-                        double child[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
-                        for (int j = 0; j < 10; j++) {
-                                child[j] = rnd_.nextDouble() * 10 - 5;
-                        }
-                        Individual newIndividual = new Individual(child);
-                        newIndividual.setFitness((double) evaluation_.evaluate(child));
-                        pop.addIndividual(newIndividual);
-                }
-        }
+        // public void InitPopulation() {
+        //         // init population and calculate fitness
+        //         this.pop = new Population();
+        //         for (int i = 0; i < this.popsize; i++) {
+        //                 double child[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+        //                 for (int j = 0; j < 10; j++) {
+        //                         child[j] = rnd_.nextDouble() * 10 - 5;
+        //                 }
+        //                 Individual newIndividual = new Individual(child);
+        //                 newIndividual.setFitness((double) evaluation_.evaluate(child));
+        //                 pop.addIndividual(newIndividual);
+        //         }
+        // }
 
         public void run() {
                 // Run your algorithm here
                 int evals = 0;
-                // init population, population size is 10
-                this.popsize = 10;
-                this.InitPopulation();
-                int sizeOfT = 4;
-                double pIndMutationProb = 0.45, pDimMutationProb = 0.3, crossoverIndProb = 1.0, crossoverDimProb = 0.9,
-                                mixRate = 0.5, msigma = 0.02; // Parameters
-                if (!isMultimodal) {
-                        pIndMutationProb = 0.45;
-                        pDimMutationProb = 0.3;
-                        crossoverIndProb = 1.0;
-                        crossoverDimProb = 0.9;
-                        mixRate = 0.5;
-                        msigma = 0.02; // Parameters
-                } else if (hasStructure) {
-                        pIndMutationProb = 0.45;
-                        pDimMutationProb = 0.8;
-                        crossoverIndProb = 1.0;
-                        crossoverDimProb = 0.5;
-                        mixRate = 0.5;
-                        msigma = 0.02; // Parameters
-                } else if (isSeparable) {
-                        pIndMutationProb = 0.45;
-                        pDimMutationProb = 0.8;
-                        crossoverIndProb = 1.0;
-                        crossoverDimProb = 0.5;
-                        mixRate = 0.5;
-                        msigma = 0.02; // Parameters
-                        double[] temp = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
-                        evaluation_.evaluate(temp);
-                }
-                EvoAlgorithm evo = new EvoAlgorithm(pop, evaluation_, pIndMutationProb, pDimMutationProb,
-                                crossoverIndProb, crossoverDimProb, evaluations_limit_ - this.popsize-1, sizeOfT, mixRate,
-                                msigma);
+                int populationSize = 20;
+                double topRatio = 0.2;
+                double sigma=1.;
+                if (!isMultimodal && hasStructure && isSeparable) {populationSize=20;topRatio=0.3; }        // Parameters for SphereEvaluation
+                if (!isMultimodal && !hasStructure && !isSeparable) {populationSize=100;topRatio=0.25; }      // Parameters for BentCigarFunction
+                if (isMultimodal && hasStructure && !isSeparable) {populationSize=20;topRatio=0.3; }        //Parameters for SchaffersEvaluation
+                if (isMultimodal && !hasStructure && !isSeparable) {populationSize=20; topRatio=0.3;}       //Parameters for KatsuuraEvaluation
+
+                EvoAlgorithm evo = new EvoAlgorithm(evaluation_, populationSize, topRatio, evaluations_limit_);
                 evo.run();
         }
 }

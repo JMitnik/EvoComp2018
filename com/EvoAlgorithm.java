@@ -4,7 +4,7 @@ import java.util.*;
 import com.*;
 import org.vu.contest.ContestEvaluation;
 import org.ejml.simple.*;
-import com.sampleUtilityClassForEJML.*;
+import com.MUtils.*;
 
 public class EvoAlgorithm {
         private static int DIM = 10;
@@ -45,18 +45,22 @@ public class EvoAlgorithm {
                 this.e = e;
                 this.populationSize = populationSize;
                 this.eval_limits = eval_limits;
-                this.topmu = populationSize * topRatio;
+                this.topmu = (int)Math.floor(populationSize * topRatio);
                 evals = 0;
                 this.eval_limits = eval_limits;
 
                 rnd_ = new Random(42);
-                m = randomDDRM(1, DIM, -5, 5, rnd_);
+                // m = MUtils.randomDDRM(1, DIM, -5, 5, rnd_);
+                m = new SimpleMatrix(1, DIM);
                 pc = new SimpleMatrix(1, DIM);
                 muw = topmu;
                 psigma = new SimpleMatrix(1, DIM);
+                // cmu = Math.max(muw / DIM / DIM, 0.5);
                 cmu = muw / DIM / DIM;
+                // cmu = 0.01;
                 dsigma = 1 + Math.sqrt(muw / DIM);
-                C = diag(DIM);
+                // dsigma=4;
+                C = MUtils.diag(DIM);
                 sigma = 1.;
 
                 population = null;
@@ -87,19 +91,33 @@ public class EvoAlgorithm {
                 // task 2 for population: evaluate the pop, then sort it, extract the first
                 // topmu inds, we are gonna use the topmu ind matrix later
                 // task 3 for population: calc the y_w, which will be used multiple times below
+
+                m = MUtils.plus(sigma, m, population.getYw());
         }
 
         // cumulation for C
         public void evolutionPathForC() {
                 // the same as before, the only thing you are gonna use about the present population is y_w
                 // might need to use the norm of the matrix, the method is SimpleMatrix.normF()
+                if (MUtils.normF(pc) < 1.5 * Math.sqrt(DIM)) {
+                  pc = MUtils.scale(1 - cc, pc)
+                           .plus(Math.sqrt((1 - Math.pow(1 - cc, 2)) * muw),
+                                 population.getYw());
+                } else {
+                  pc = MUtils.scale(1 - cc, pc);
+                }
         }
         // cumulation for \sigma
         public void evolutionPathForSigma() {
                 // the same as before, the only thing you are gonna use about the present population is y_w
                 // might need to use the C^{\frac{1}{2}}, since we are not gonna use it anymore in this iter,
                 // I guess we dont need to store the result as a special variable
-                // TODO: Implement an operator to calc C^{\frac{1}{2}} in utility class
+
+                // (C^{-\frac{1}{2}}y_w^T)^T = y_w C^{-\frac{1}{2}}
+                psigma = MUtils.scale(1 - cc, psigma)
+                             .plus(Math.sqrt((1 - Math.pow(1 - cc, 2)) * muw),
+                                   MUtils.multiply(population.getYw(),
+                                        MUtils.getHalfInverse(C)));
         }
 
         // update C
@@ -107,20 +125,25 @@ public class EvoAlgorithm {
                 // will mainly use three operator, transpose, matrix product, and mean wrt the first axi
 
                 // task 4 for population: extract the first topmu inds, which has been done in task 2
-                
+                C = MUtils.scale(1 - c1 - cmu, C)
+                        .plus(c1, MUtils.getSymmetricM(pc))
+                                .plus(cmu/topmu/topmu, population.getRankmuUpdate());
         }
         // update of σ
         public void updateSigma() {
                 // will use the norm operator
                 // a side note: E\left\norm \mathscr{N}(0, I) \right\norm is √2 Γ((n+1)/2)/Γ(n/2), 
                 // the val has been calced beforehand, stored in `gammaExp`
+                sigma *= Math.exp(csigma / dsigma *
+                                  (MUtils.normF(psigma) / gammaExp - 1));
         }
 
 
         public void run() {
-                while (evals < eval_limits) {
+                while (evals < eval_limits-populationSize) {
                         sampleNewGen();
-                        evals -= populationSize;
+                        evals += populationSize;
+                        // System.out.println(evals);
                         updateMean();
                         evolutionPathForC();
                         evolutionPathForSigma();

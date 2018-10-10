@@ -28,7 +28,7 @@ import org.ejml.dense.row.factory.DecompositionFactory_DDRM;
 // assume the original matrix has been added to the value as you expect. The
 // `addVectorToRow`, though, is inplace.
 
-class sampleUtilityClassForEJML {
+class MUtils {
     // simply transpose, will not change a's value
 
     /**
@@ -39,9 +39,14 @@ class sampleUtilityClassForEJML {
     public static SimpleMatrix transpose(SimpleMatrix a) {
         return a.transpose();
     }
+    
+    public static SimpleMatrix getSymmetricM(SimpleMatrix a) {
+        return a.transpose().mult(a);
+    }
+    
 
     public static double normF(SimpleMatrix x) {
-        return s.normF();
+        return x.normF();
     }
 
 
@@ -105,13 +110,13 @@ class sampleUtilityClassForEJML {
         return B.mult(DInvSqrt).mult(B.transpose());
     }
     /**
-     * Returns a new vector(n=dim, m=1) drawn from N(0, cov).
+     * Returns a new vector(n=1, m=dim) drawn from N(0, cov).
      * @param cov
      * @param rand
      * @return
      */
     public static SimpleMatrix randomNormal(SimpleMatrix cov, Random rand) {
-        return SimpleMatrix.randomNormal(cov, rand);
+        return SimpleMatrix.randomNormal(cov, rand).transpose();
     }
     
     public static SimpleMatrix randomDDRM(int numRows, int numCols, double minVal, double maxVal, Random rand) {
@@ -205,17 +210,22 @@ class sampleUtilityClassForEJML {
         return A.plus(alpha, B);
     }
 
-    /**
-     * Adds a vector 'b' to a specific row of index 'row' of a matrix.
-     * Equivalent to A[row, :]+=b
-     * Does this inplace, and mutates the original matrix!
-     * @param A
-     * @param row
-     * @param b
-     */
-    public static void addVectorToRow(SimpleMatrix A, int row, SimpleMatrix b) {
-        A.insertIntoThis(row, 0, A.rows(row, row + 1).plus(b));
-        return;
+    public static SimpleMatrix scale(double alpha, SimpleMatrix A) {
+        return A.scale(alpha);
+    }
+
+        /**
+         * Adds a vector 'b' to a specific row of index 'row' of a matrix.
+         * Equivalent to A[row, :]+=b
+         * Does this inplace, and mutates the original matrix!
+         * @param A
+         * @param row
+         * @param b
+         */
+        public static void addVectorToRow(SimpleMatrix A, int row,
+                                          SimpleMatrix b) {
+      A.insertIntoThis(row, 0, A.rows(row, row + 1).plus(b));
+      return;
     }
 
     public static SimpleMatrix diag(int dim) {
@@ -265,15 +275,25 @@ class sampleUtilityClassForEJML {
         return;
     }
 
+    private static SimpleMatrix meanIncremental(SimpleMatrix a, SimpleMatrix b, double i) {
+                // System.out.println(i);
+                // a.scale(i / (i + 1)).print();
+                return a.scale(i / (i + 1)).plus(1 / (i + 1), b);
+    }
     public static void main(String args[]) {
         Random rand = new Random(42);
         // first method to generate a new SimpleMatrix
         SimpleMatrix a = SimpleMatrix.random_DDRM(2, 10, -5, 5, rand);
         SimpleMatrix b = SimpleMatrix.random_DDRM(10, 2, -5, 5, rand);
         // System.out.println(b.numRows());
+        SimpleMatrix mean = new SimpleMatrix(2, 10);
+        mean = meanIncremental(mean, a, 0);
+        mean = meanIncremental(mean, b.transpose(), 1);
         a.print();
+        b.transpose().print();
+        mean.print();
         transpose(a);
-        a.print();
+        // a.print();
         // second method, to generate from a calculation result
         SimpleMatrix c = multiply(a, b);
         c.print();
