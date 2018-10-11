@@ -70,13 +70,14 @@ public void Initialize(){
         cov_old=SimpleMatrix.identity(DIM);
         c_sigma=(4.0/DIM);
         d_sigma=3.0;
+        rnd=new Random();
         // without hidden labour
         // xmean=SimpleMatrix.random_DDRM(DIM,1,-5,5,rnd); //mean vector is initialized randomly
         // xmean=new SimpleMatrix(DIM,1);
         // with hidden labour
         double data[][]={
                 {0,0,0,0,0,0,0,0,0,0},
-                {-0.89,3.99,0.17,-3.80,-0.46,-2.08,1.38,-0.73,1.14,-0.30},
+                {-0.892,3.991,0.171,-3.80,-0.469,-2.0887,1.3839,-0.7344,1.1456,-0.304},
                 {3.65,2.54,-1.52,1.46,1.39,-1.90,3.50,-2.35,-0.38,-2.03},
                 {-0.04262,-0.19543,-0.02582,-0.11764,0.16344,0.05481,0.11488,-0.11648,0.02446,-0.03941}
         };
