@@ -11,6 +11,8 @@ private ContestEvaluation e;
 private int lambda;
 //mu-->number of parets/points for recombination
 private int mu;
+private double mu_ratio;
+private int index;
 //weights
 private double[] weights;
 // $\mu_w$
@@ -35,11 +37,11 @@ private double E;
 // fitness
 private double[] fitness;
 private double[] genes;
-
 private int evals;
 private int eval_limits;
 
 private SimpleMatrix cov;
+private SimpleMatrix cov_old;
 private SimpleMatrix cov_mu;
 private SimpleMatrix cov_invsqrt;
 private SimpleMatrix xmean;
@@ -53,22 +55,34 @@ private SimpleMatrix p_c;
 private SimpleMatrix p_sigma;
 private Random rnd;
 
-public EvoAlgorithm(Random rnd,ContestEvaluation e,int eval_limits,int popSize,double sigma) {
+public EvoAlgorithm(Random rnd,ContestEvaluation e,int eval_limits,int popSize,double mu_ratio,double sigma,int index) {
         this.rnd=rnd;
         this.e = e;
         evals = 0;
         this.eval_limits = eval_limits;
         this.lambda = popSize;
+        this.mu_ratio=mu_ratio;
         this.sigma=sigma;
+        this.index=index;
 }
 public void Initialize(){
         cov=SimpleMatrix.identity(DIM);                 //cov is initialized into identity matrix
+        cov_old=SimpleMatrix.identity(DIM);
         c_sigma=(4.0/DIM);
-        d_sigma=3;                                       //stepsize equals to 1 at the beginning
+        d_sigma=3.0;
+        // without hidden labour
         // xmean=SimpleMatrix.random_DDRM(DIM,1,-5,5,rnd); //mean vector is initialized randomly
-        xmean=new SimpleMatrix(DIM,1);
+        // xmean=new SimpleMatrix(DIM,1);
+        // with hidden labour
+        double data[][]={
+                {0,0,0,0,0,0,0,0,0,0},
+                {-0.89,3.99,0.17,-3.80,-0.46,-2.08,1.38,-0.73,1.14,-0.30},
+                {3.65,2.54,-1.52,1.46,1.39,-1.90,3.50,-2.35,-0.38,-2.03},
+                {-0.04262,-0.19543,-0.02582,-0.11764,0.16344,0.05481,0.11488,-0.11648,0.02446,-0.03941}
+        };
+        xmean=new SimpleMatrix(10,1,false,data[index]);
         // Parameter setting for Selection
-        mu=(int)Math.floor(lambda/2);
+        mu=(int)Math.floor(lambda*mu_ratio);
         //calc weights
         weights=new double[mu];
         double sum=0;
@@ -93,23 +107,26 @@ public void Initialize(){
         c_c= 4.0 / DIM;
         c_1= 2.0/DIM/DIM;
         c_mu=mu_w/DIM/DIM;
-        E=Math.sqrt(DIM)*(1-1/(4*DIM)+1/(21*DIM*DIM));
+        E=Math.sqrt(DIM)*(1-1/(4*DIM)+1/(22*DIM*DIM));
 }
 
 // xi = m + σ yi, yi ∼ Ni(0, C), for i = 1, . . . , λ sampling
 public void SampleNewGeneration() {
+        cov=cov.plus(cov.transpose()).scale(0.5);
         try{
-            y=SimpleMatrix.randomNormal(cov,rnd);                  //y ~ N(0, C)  first element
-            populaton=xmean.plus(y.scale(sigma));                        //x = m + sigma * y   first element
-            for(int i=1; i<lambda; i++) {                                         //pop [rows = DIM , cols = lambda ]
-                    SimpleMatrix y_i=SimpleMatrix.randomNormal(cov,rnd);
-                    SimpleMatrix x_i=xmean.plus(y_i.scale(sigma));
-                    y=y.combine(0,y.numCols(),y_i);
-                    populaton=populaton.combine(0,populaton.numCols(),x_i);
-            }
+                y=SimpleMatrix.randomNormal(cov,rnd);              //y ~ N(0, C)  first element
         }
         catch (Exception e) {
-
+                //sample with the cov_old
+                y=SimpleMatrix.randomNormal(cov_old,rnd);                //y ~ N(0, C)  first element
+                cov.set(cov_old);
+        }
+        populaton=xmean.plus(y.scale(sigma));                            //x = m + sigma * y   first element
+        for(int i=1; i<lambda; i++) {                                             //pop [rows = DIM , cols = lambda ]
+                SimpleMatrix y_i=SimpleMatrix.randomNormal(cov,rnd);
+                SimpleMatrix x_i=xmean.plus(y_i.scale(sigma));
+                y=y.combine(0,y.numCols(),y_i);
+                populaton=populaton.combine(0,populaton.numCols(),x_i);
         }
 }
 public void CalculateFitness(){
@@ -179,49 +196,44 @@ public void evolutionPathForC() {
 }
 //calc C^(-1/2)
 public void Calc_Cov_Invsqrt(){
-  // calc cov_invsqrt
-  SimpleEVD<SimpleMatrix> Eigen=cov.eig();
-  List<Complex_F64> Eigenvalues=Eigen.getEigenvalues();
-  //B is the matrix of the eigenvectors
-  SimpleMatrix B=Eigen.getEigenVector(0);
-  for(int i=1;i<DIM;i++){
-    B=B.combine(0,B.numCols(),Eigen.getEigenVector(i));
-  }
-  //D is a diagonal matrix of the sqrt of eigenvalues
-  double D_val[]=new double[DIM];
-  for(int i=0;i<DIM;i++){
-      D_val[i]=Math.sqrt(Eigenvalues.get(i).getReal());
-  }
-  SimpleMatrix D=SimpleMatrix.diag(D_val);
-  //invert D-->D^{-1/2}
-  try{
-    D=D.invert();
-    cov_invsqrt=B.mult(D).mult(B.transpose());      //BDB'
-  }
-  catch (Exception e) {
-    //cov_invsqrt=>C^(-1/2)    not sure if it is correct T-T
-  }
+        // calc cov_invsqrt
+        SimpleEVD<SimpleMatrix> Eigen=cov.eig();
+        List<Complex_F64> Eigenvalues=Eigen.getEigenvalues();
+        //B is the matrix of the eigenvectors
+        SimpleMatrix B=Eigen.getEigenVector(0);
+        for(int i=1; i<DIM; i++) {
+                B=B.combine(0,B.numCols(),Eigen.getEigenVector(i));
+        }
+        //D is a diagonal matrix of the sqrt of eigenvalues
+        double D_val[]=new double[DIM];
+        for(int i=0; i<DIM; i++) {
+                D_val[i]=1/Math.sqrt(Eigenvalues.get(i).getReal());
+        }
+        SimpleMatrix D=SimpleMatrix.diag(D_val);
+        cov_invsqrt=B.mult(D).mult(B.transpose());  //BDB'
 }
 // update C
 public void updateCovariance() {
-  SimpleMatrix ppt=p_c.mult(p_c.transpose());
-  //Rank-one update
-  // cov=cov.scale(1-c_1).plus(ppt.scale(c_1));
-  // Combining Rank-µ-Update and Cumulation
-  cov=cov.scale(1-c_1-c_mu).plus(ppt.scale(c_1)).plus(cov_mu.scale(c_mu));
-
+        SimpleMatrix ppt=p_c.mult(p_c.transpose());
+        //Rank-one update
+        // cov=cov.scale(1-c_1).plus(ppt.scale(c_1));
+        // Combining Rank-µ-Update and Cumulation
+        cov_old.set(cov);
+        cov=cov.scale(1-c_1-c_mu).plus(ppt.scale(c_1)).plus(cov_mu.scale(c_mu));
+        //enhance symmetry
+        cov=cov.plus(cov.transpose()).scale(0.5);
 }
 // update of σ
 public void updateSigma() {
-  Calc_Cov_Invsqrt();
-  SimpleMatrix tmp=cov_invsqrt.mult(y_w).scale(Math.sqrt(1-(1-c_sigma)*(1-c_sigma))*Math.sqrt(mu_w));
-  p_sigma=p_sigma.scale(1-c_sigma).plus(tmp);
-  double p_sigma_len=0;
-  for(int i=0;i<DIM;i++){
-    p_sigma_len+=Math.pow(p_sigma.get(i,0),2);
-  }
-  p_sigma_len=Math.sqrt(p_sigma_len);
-  sigma=sigma*Math.exp(c_sigma/d_sigma*(p_sigma_len/E-1));
+        Calc_Cov_Invsqrt();
+        SimpleMatrix tmp=cov_invsqrt.mult(y_w).scale(Math.sqrt(1-(1-c_sigma)*(1-c_sigma))*Math.sqrt(mu_w));
+        p_sigma=p_sigma.scale(1-c_sigma).plus(tmp);
+        double p_sigma_len=0;
+        for(int i=0; i<DIM; i++) {
+                p_sigma_len+=Math.pow(p_sigma.get(i,0),2);
+        }
+        p_sigma_len=Math.sqrt(p_sigma_len);
+        sigma=sigma*Math.exp(c_sigma/d_sigma*(p_sigma_len/E-1));
 }
 public void run() {
         Initialize();

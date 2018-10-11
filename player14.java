@@ -9,6 +9,8 @@ Random rnd_;
 ContestEvaluation evaluation_;
 private int evaluations_limit_;
 private int popSize;
+private double mu_ratio;
+private int index;
 private double sigma;
 boolean isMultimodal;
 boolean hasStructure;
@@ -49,11 +51,11 @@ public void setEvaluation(ContestEvaluation evaluation)
 
 public void run()
 {
-        if (!isMultimodal && hasStructure && isSeparable) {popSize=20;sigma=1; }        // Parameters for SphereEvaluation
-        if (!isMultimodal && !hasStructure && !isSeparable) {popSize=20;sigma=0.85; }      // Parameters for BentCigarFunction
-        if (isMultimodal && hasStructure && !isSeparable) {popSize=100;sigma=1; }        //Parameters for SchaffersEvaluation
-        if (isMultimodal && !hasStructure && !isSeparable) {popSize=100; sigma=1;}       //Parameters for KatsuuraEvaluation
-        EvoAlgorithm evo=new EvoAlgorithm(rnd_,evaluation_,evaluations_limit_,popSize,sigma);
+        if (!isMultimodal && hasStructure && isSeparable) {popSize=20; mu_ratio=0.25; sigma=1;index=0; }        // Parameters for SphereEvaluation
+        if (!isMultimodal && !hasStructure && !isSeparable) {popSize=20; mu_ratio=0.5; sigma=0.01;index=1;  }      // Parameters for BentCigarFunction
+        if (isMultimodal && hasStructure && !isSeparable) {popSize=100; mu_ratio=0.6; sigma=0.1;index=2;  }        //Parameters for SchaffersEvaluation
+        if (isMultimodal && !hasStructure && !isSeparable) {popSize=100; mu_ratio=0.5; sigma=0.001;index=3;  }       //Parameters for KatsuuraEvaluation
+        EvoAlgorithm evo=new EvoAlgorithm(rnd_,evaluation_,evaluations_limit_,popSize,mu_ratio,sigma,index);
         evo.run();
 }
 }
