@@ -33,6 +33,7 @@ private double d_sigma;
 //E(N(0,I))
 private double E;
 
+private double beta;
 
 // fitness
 private double[] fitness;
@@ -53,6 +54,8 @@ private SimpleMatrix y_w;
 private SimpleMatrix populaton;
 private SimpleMatrix p_c;
 private SimpleMatrix p_sigma;
+
+private SimpleMatrix meanUpdate;
 private Random rnd;
 
 public EvoAlgorithm(Random rnd,ContestEvaluation e,int eval_limits,int popSize,double mu_ratio,double sigma,int index) {
@@ -81,7 +84,8 @@ public void Initialize(){
                 {3.65,2.54,-1.52,1.46,1.39,-1.90,3.50,-2.35,-0.38,-2.03},
                 {-0.04262,-0.19543,-0.02582,-0.11764,0.16344,0.05481,0.11488,-0.11648,0.02446,-0.03941}
         };
-        xmean=new SimpleMatrix(10,1,false,data[index]);
+        // xmean=new SimpleMatrix(10,1,false,data[index]);
+        xmean=new SimpleMatrix(DIM,1);
         // Parameter setting for Selection
         mu=(int)Math.floor(lambda*mu_ratio);
         //calc weights
@@ -109,6 +113,9 @@ public void Initialize(){
         c_1= 2.0/DIM/DIM;
         c_mu=mu_w/DIM/DIM;
         E=Math.sqrt(DIM)*(1-1/(4*DIM)+1/(22*DIM*DIM));
+        
+        meanUpdate=new SimpleMatrix(DIM,1);
+        beta=0.9;
 }
 
 // xi = m + σ yi, yi ∼ Ni(0, C), for i = 1, . . . , λ sampling
@@ -179,7 +186,8 @@ public void updateMean() {
                 y_w=y_w.plus(y_i.scale(weights[i]));
         }
         //xmean=xmean+sigma*y_w
-        xmean=xmean.plus(y_w.scale(sigma));
+        evolutionPathForMean();
+        xmean=xmean.plus(meanUpdate.scale(sigma));
 
 }
 
@@ -194,6 +202,11 @@ public void evolutionPathForC() {
                 SimpleMatrix yiyit=y_i.mult(y_i.transpose());
                 cov_mu=cov_mu.plus(yiyit.scale(weights[i]));
         }
+}
+
+// momentum for mean
+public void evolutionPathForMean() {
+        meanUpdate = y_w.plus(beta, meanUpdate);
 }
 //calc C^(-1/2)
 public void Calc_Cov_Invsqrt(){
