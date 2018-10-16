@@ -1,22 +1,18 @@
+import numpy as np
+
 from Simulator import Simulator
 from Setup import Setup
 
 EVALUATIONS = ["SphereEvaluation", "BentCigarFunction",
                "SchaffersEvaluation", "KatsuuraEvaluation"]
 
-populationSetup = Setup("Mutation", [
-    i for i in range(100, 1000, 100)
-])
+populationSetup = Setup("Mutation", np.linspace(100, 1000, 100))
 
-momentumSetup = Setup("Momentum", [
-    i for i in range(0, 1, 0.1)
-])
+momentumSetup = Setup("Momentum", np.linspace(0, 1, 0.1))
 
-sigmaSetup = Setup("Sigma", [
-    # Sigma values
-])
+sigmaSetup = Setup("Sigma", np.linspace(0, 100))
 
-setups = [populationSetup, momentumSetup, sigmaSetup]
+setups = [populationSetup, momentumSetup]
 
-sim = Simulator(setups, 10)
+sim = Simulator(EVALUATIONS, setups, 10)
 sim.run()

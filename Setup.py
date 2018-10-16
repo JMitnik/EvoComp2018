@@ -1,6 +1,6 @@
 class Setup:
 
-    def __init__(self, parameter_name = "", parameter_values = []):
-        self.parameter_name = parameter_name
+    def __init__(self, name = "", parameter_values = []):
+        self.name = name
         self.parameter_values = parameter_values
         self.parameter_scores = []
