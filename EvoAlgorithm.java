@@ -147,10 +147,29 @@ public void CalculateFitness(){
                 fitness[i]=(double)e.evaluate(genes);      //calculate the fitness of column i
         }
 }
-// m ← \sum_ {i=1}^\mu wi * x_{i:λ} = m + σy_w where y_w = \sum_
-// {i=1}^\mu*wi y_{i:λ}
 // update mean
 public void updateMean() {
+        xmean=xmean.plus(meanUpdate.scale(sigma));        
+}
+
+
+// cumulation for C
+public void evolutionPathForC() {
+        //calculate p_c
+        p_c=p_c.scale(1-c_c).plus(y_w.scale(Math.sqrt(1-(1-c_c)*(1-c_c))*Math.sqrt(mu_w)));
+        //calculate C_mu for Rank mu update
+        cov_mu=new SimpleMatrix(DIM,DIM);
+        for(int i=0; i<mu; i++) {
+                SimpleMatrix y_i=y_topmu.extractVector(false,i);
+                SimpleMatrix yiyit=y_i.mult(y_i.transpose());
+                cov_mu=cov_mu.plus(yiyit.scale(weights[i]));
+        }
+}
+
+// m ← \sum_ {i=1}^\mu wi * x_{i:λ} = m + σy_w where y_w = \sum_
+// {i=1}^\mu*wi y_{i:λ}
+// momentum for mean
+public void evolutionPathForMean() {
         //Sort the fitness
         //very basic bubble sort but easy to get the index
         int index[]=new int[lambda]; int tmp_index;
@@ -185,27 +204,6 @@ public void updateMean() {
                 SimpleMatrix y_i=y_topmu.extractVector(false,i);
                 y_w=y_w.plus(y_i.scale(weights[i]));
         }
-        //xmean=xmean+sigma*y_w
-        evolutionPathForMean();
-        xmean=xmean.plus(meanUpdate.scale(sigma));
-
-}
-
-// cumulation for C
-public void evolutionPathForC() {
-        //calculate p_c
-        p_c=p_c.scale(1-c_c).plus(y_w.scale(Math.sqrt(1-(1-c_c)*(1-c_c))*Math.sqrt(mu_w)));
-        //calculate C_mu for Rank mu update
-        cov_mu=new SimpleMatrix(DIM,DIM);
-        for(int i=0; i<mu; i++) {
-                SimpleMatrix y_i=y_topmu.extractVector(false,i);
-                SimpleMatrix yiyit=y_i.mult(y_i.transpose());
-                cov_mu=cov_mu.plus(yiyit.scale(weights[i]));
-        }
-}
-
-// momentum for mean
-public void evolutionPathForMean() {
         meanUpdate = y_w.plus(beta, meanUpdate);
 }
 //calc C^(-1/2)
@@ -253,9 +251,10 @@ public void run() {
         Initialize();
         while (evals < eval_limits) {
                 evals+=lambda;
+                updateMean();
                 SampleNewGeneration();
                 CalculateFitness();
-                updateMean();
+                evolutionPathForMean();
                 evolutionPathForC();
                 updateCovariance();
                 updateSigma();
