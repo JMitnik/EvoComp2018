@@ -57,6 +57,7 @@ private SimpleMatrix p_sigma;
 
 private SimpleMatrix meanUpdate;
 private Random rnd;
+private ArrayList<Double> fitnessValues;
 
 public EvoAlgorithm(Random rnd,ContestEvaluation e,int eval_limits,int popSize,double mu_ratio,double sigma,int index) {
         this.rnd=rnd;
@@ -116,6 +117,7 @@ public void Initialize(){
         
         meanUpdate=new SimpleMatrix(DIM,1);
         beta=0.9;
+        fitnessValues = new ArrayList<>();
 }
 
 // xi = m + σ yi, yi ∼ Ni(0, C), for i = 1, . . . , λ sampling
@@ -145,6 +147,10 @@ public void CalculateFitness(){
                         genes[j]=populaton.get(j,i);      //get the genes from column i
                 }
                 fitness[i]=(double)e.evaluate(genes);      //calculate the fitness of column i
+        }
+
+        for (double f: fitness) {
+                fitnessValues.add(f);
         }
 }
 // update mean
@@ -259,6 +265,8 @@ public void run() {
                 updateCovariance();
                 updateSigma();
         }
+
+        System.out.println(fitnessValues);
 }
 
 }
