@@ -129,7 +129,7 @@ public void SampleNewGeneration() {
                 y=SimpleMatrix.randomNormal(cov_old,rnd);                //y ~ N(0, C)  first element
                 cov.set(cov_old);
         }
-        populaton=xmean.plus(y.scale(sigma));                            //x = m + sigma * y   first element
+        populaton=xmean.plus(meanUpdate).plus(y.scale(sigma));                            //x = m + sigma * y   first element
         for(int i=1; i<lambda; i++) {                                             //pop [rows = DIM , cols = lambda ]
                 SimpleMatrix y_i=SimpleMatrix.randomNormal(cov,rnd);
                 SimpleMatrix x_i=xmean.plus(y_i.scale(sigma));
@@ -249,12 +249,12 @@ public void updateSigma() {
 }
 public void run() {
         Initialize();
-        while (evals < eval_limits) {
+        while (evals < eval_limits-lambda) {
                 evals+=lambda;
-                updateMean();
                 SampleNewGeneration();
                 CalculateFitness();
                 evolutionPathForMean();
+                updateMean();
                 evolutionPathForC();
                 updateCovariance();
                 updateSigma();
