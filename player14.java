@@ -11,6 +11,7 @@ private int evaluations_limit_;
 private int popSize;
 private double mu_ratio;
 private int index;
+private double beta;
 private double sigma;
 boolean isMultimodal;
 boolean hasStructure;
@@ -51,17 +52,21 @@ public void setEvaluation(ContestEvaluation evaluation)
 
 public void run()
 {
-        if (!isMultimodal && hasStructure && isSeparable) {popSize=100; mu_ratio=0.25; sigma=1;index=0; }        // Parameters for SphereEvaluation
-        if (!isMultimodal && !hasStructure && !isSeparable) {popSize=100; mu_ratio=0.25; sigma=1.;index=1;  }      // Parameters for BentCigarFunction
-        if (isMultimodal && hasStructure && !isSeparable) {popSize=100; mu_ratio=0.6; sigma=1;index=2;  }        //Parameters for SchaffersEvaluation
-        if (isMultimodal && !hasStructure && !isSeparable) {popSize=100; mu_ratio=0.5; sigma=0.1;index=3;  }       //Parameters for KatsuuraEvaluation
+        if (!isMultimodal && hasStructure && isSeparable) {popSize=100; mu_ratio=0.25; sigma=1;index=0; beta=0;}        // Parameters for SphereEvaluation
+        if (!isMultimodal && !hasStructure && !isSeparable) {popSize=100; mu_ratio=0.25; sigma=1.;index=1; beta=0; }      // Parameters for BentCigarFunction
+        if (isMultimodal && hasStructure && !isSeparable) {popSize=100; mu_ratio=0.6; sigma=1;index=2;  beta=0;}        //Parameters for SchaffersEvaluation
+        if (isMultimodal && !hasStructure && !isSeparable) {popSize=100; mu_ratio=0.5; sigma=0.1;index=3;  beta=0;}       //Parameters for KatsuuraEvaluation
+
         try{
-          popSize=(int)Double.parseDouble(System.getProperty("popsize"));
-          sigma=Double.parseDouble(System.getProperty("sigma"));
+                popSize=(int)Double.parseDouble(System.getProperty("popsize"));
+                sigma=Double.parseDouble(System.getProperty("sigma"));
+                beta=Double.parseDouble(System.getProperty("momentum"));
         }
+
         catch (Exception e) {
         }
-        EvoAlgorithm evo=new EvoAlgorithm(rnd_,evaluation_,evaluations_limit_,popSize,mu_ratio,sigma,index);
+
+        EvoAlgorithm evo=new EvoAlgorithm(rnd_,evaluation_,evaluations_limit_,popSize,mu_ratio,sigma,index, beta);
         evo.run();
 }
 }

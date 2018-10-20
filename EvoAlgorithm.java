@@ -33,6 +33,8 @@ private double d_sigma;
 //E(N(0,I))
 private double E;
 
+private double epsilon;
+
 private double beta;
 
 // fitness
@@ -57,9 +59,9 @@ private SimpleMatrix p_sigma;
 
 private SimpleMatrix meanUpdate;
 private Random rnd;
-private ArrayList<Double> fitnessValues;
+private List<Double> fitnessValues;
 
-public EvoAlgorithm(Random rnd,ContestEvaluation e,int eval_limits,int popSize,double mu_ratio,double sigma,int index) {
+public EvoAlgorithm(Random rnd,ContestEvaluation e,int eval_limits,int popSize,double mu_ratio,double sigma,int index, double beta) {
         this.rnd=rnd;
         this.e = e;
         evals = 0;
@@ -68,6 +70,7 @@ public EvoAlgorithm(Random rnd,ContestEvaluation e,int eval_limits,int popSize,d
         this.mu_ratio=mu_ratio;
         this.sigma=sigma;
         this.index=index;
+        this.beta = beta;
 }
 public void Initialize(){
         cov=SimpleMatrix.identity(DIM);                 //cov is initialized into identity matrix
@@ -87,7 +90,7 @@ public void Initialize(){
         };
         // xmean=new SimpleMatrix(10,1,false,data[index]);
         xmean=new SimpleMatrix(DIM,1);
-        // Parameter setting for Selection
+        // Parameter setting form  Selection
         mu=(int)Math.floor(lambda*mu_ratio);
         //calc weights
         weights=new double[mu];
@@ -116,21 +119,22 @@ public void Initialize(){
         E=Math.sqrt(DIM)*(1-1/(4*DIM)+1/(22*DIM*DIM));
         
         meanUpdate=new SimpleMatrix(DIM,1);
-        beta=0.9;
-        fitnessValues = new ArrayList<>();
+        epsilon = 0.01;
+        fitnessValues = new ArrayList<Double>();
 }
 
-// xi = m + σ yi, yi ∼ Ni(0, C), for i = 1, . . . , λ sampling
 public void SampleNewGeneration() {
         cov=cov.plus(cov.transpose()).scale(0.5);
+
         try{
-                y=SimpleMatrix.randomNormal(cov,rnd);              //y ~ N(0, C)  first element
+                y=SimpleMatrix.randomNormal(cov,rnd);
         }
         catch (Exception e) {
                 //sample with the cov_old
-                y=SimpleMatrix.randomNormal(cov_old,rnd);                //y ~ N(0, C)  first element
+                y=SimpleMatrix.randomNormal(cov_old,rnd);
                 cov.set(cov_old);
         }
+
         populaton=xmean.plus(meanUpdate).plus(y.scale(sigma));                            //x = m + sigma * y   first element
         for(int i=1; i<lambda; i++) {                                             //pop [rows = DIM , cols = lambda ]
                 SimpleMatrix y_i=SimpleMatrix.randomNormal(cov,rnd);
@@ -172,8 +176,6 @@ public void evolutionPathForC() {
         }
 }
 
-// m ← \sum_ {i=1}^\mu wi * x_{i:λ} = m + σy_w where y_w = \sum_
-// {i=1}^\mu*wi y_{i:λ}
 // momentum for mean
 public void evolutionPathForMean() {
         //Sort the fitness
@@ -235,13 +237,12 @@ public void updateCovariance() {
         SimpleMatrix ppt=p_c.mult(p_c.transpose());
         //Rank-one update
         // cov=cov.scale(1-c_1).plus(ppt.scale(c_1));
-        // Combining Rank-µ-Update and Cumulation
         cov_old.set(cov);
         cov=cov.scale(1-c_1-c_mu).plus(ppt.scale(c_1)).plus(cov_mu.scale(c_mu));
         //enhance symmetry
         cov=cov.plus(cov.transpose()).scale(0.5);
 }
-// update of σ
+
 public void updateSigma() {
         Calc_Cov_Invsqrt();
         SimpleMatrix tmp=cov_invsqrt.mult(y_w).scale(Math.sqrt(1-(1-c_sigma)*(1-c_sigma))*Math.sqrt(mu_w));
@@ -253,6 +254,7 @@ public void updateSigma() {
         p_sigma_len=Math.sqrt(p_sigma_len);
         sigma=sigma*Math.exp(c_sigma/d_sigma*(p_sigma_len/E-1));
 }
+
 public void run() {
         Initialize();
         while (evals < eval_limits-lambda) {
@@ -266,6 +268,7 @@ public void run() {
                 updateSigma();
         }
 
+        // Important: nets result for the Python data analysis after the results are all done
         System.out.println(fitnessValues);
 }
 
