@@ -7,3 +7,9 @@ submission.jar
 # for vscode
 *.sql
 .vscode
+
+storage/*
+.ipynb_checkpoints/*
+*.xml
+*.iml
+*.jar
