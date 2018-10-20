@@ -37,6 +37,8 @@ private double epsilon;
 
 private double beta;
 
+private double bestYet=0;
+
 // fitness
 private double[] fitness;
 private double[] genes;
@@ -154,12 +156,15 @@ public void CalculateFitness(){
         }
 
         for (double f: fitness) {
-                fitnessValues.add(f);
+                if (f>bestYet) {
+                        bestYet=f;
+                }
+                fitnessValues.add(bestYet);
         }
 }
 // update mean
 public void updateMean() {
-        xmean=xmean.plus(meanUpdate.scale(sigma));        
+        xmean=xmean.plus(meanUpdate);        
 }
 
 
@@ -212,7 +217,7 @@ public void evolutionPathForMean() {
                 SimpleMatrix y_i=y_topmu.extractVector(false,i);
                 y_w=y_w.plus(y_i.scale(weights[i]));
         }
-        meanUpdate = y_w.plus(beta, meanUpdate);
+        meanUpdate = y_w.scale(sigma).plus(beta, meanUpdate);
 }
 //calc C^(-1/2)
 public void Calc_Cov_Invsqrt(){
