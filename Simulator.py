@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import matplotlib as plot
+import matplotlib.pyplot as plt
 import sklearn as sk
 import importlib
 import seaborn as sns
@@ -18,9 +18,10 @@ class Simulator:
         - runs(int): Number of runs per setup
     """
     
-    def __init__(self, setups, runs=10):
+    def __init__(self, setups, runs=10, prefix=""):
         self.setups = setups
         self.runs = runs
+        self.prefix= ""
 
     def run(self):
         for setup in self.setups:
@@ -76,10 +77,11 @@ class Simulator:
             end_df[index] = df.mean(axis='columns')
             
         return end_df
+
     
     def generatePlotForSetup(self, setup, start_index=0, end_index=-1, threshold=10.0, output_data=pd.DataFrame()):
         """Generates a plot, assuming your setup has been run and stored in storage."""
-        path = PATH_TO_PLOTS + "{}/{}-parameters.png".format(setup.evaluation.name, setup.param_name)
+        path = PATH_TO_PLOTS + "{}/{}-parameters".format(setup.evaluation.name, setup.param_name)
         
         if end_index < 0:
             end_index = output_data.size - 1
@@ -87,14 +89,13 @@ class Simulator:
         if output_data.size < 1:
             output_data = self.readDataForSetup(setup)
         
-        my_palette = sns.color_palette("rocket_r", 6)
-
-        sns.relplot(hue="coherence", kind="line",palette=my_palette, legend=False, data=output_data[output_data < threshold].iloc[start_index:])
-        plt.title("{} values for {} over {} runs".format(setup.param_name, setup.evaluation.name, self.runs))
+        my_palette = sns.color_palette("rocket_r", 11)
+        sns.relplot(hue="coherence", kind="line", dashes=False, palette=my_palette, legend=False, data=output_data[output_data < threshold].iloc[start_index:])
+        plt.title("{} values for {} over 10 runs".format(setup.param_name, setup.evaluation.name, self.runs))
         plt.legend(["beta="+str(i) for i in setup.parameter_values])
         plt.xlabel("Evaluation")
         plt.ylabel("Best Fitness")
         
         makeDirStructure(path)
-        plt.savefig(path)
+        plt.savefig(path, format='eps', dpi=1000)
         
